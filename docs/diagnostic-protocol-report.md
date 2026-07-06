@@ -1,95 +1,104 @@
-# Practical Diagnostic Protocol for Arboreal Health and Decay Management
+# 樹木医実務診断プロトコル：精密診断から総合処方までの技術指針
 
-This protocol establishes the Evidence-Based Diagnosis (EBD) framework for evaluating arboreal structural integrity and pathological decline. As a Senior Tree Doctor, I mandate the following standardized progression to ensure public safety and the preservation of biological infrastructure.
+## 1. 樹木医の倫理規定と実務への適用
+樹木医は「樹木医の手引き」に規定された高い倫理観に基づき、科学的客観性をもって診断にあたらなければならない。全ての診断結論は、公衆安全の確保と法的責任の観点から、定量的データによって裏付けられる必要がある。
 
----
+*   **樹木医の使命**
+    *   **自然保護・環境保全:** 健全な樹勢を維持し、都市および森林における生態系サービスを最大化する。
+    *   **文化財保護:** 歴史的価値を有する巨樹・老木を、科学的知見に基づき次世代へ継承する。
+    *   **公共の安全確保:** 倒木・折損による人身事故および器物損害を未然に防ぐため、リスク管理を徹底する。
+*   **行動規範**
+    *   **科学的客観性の維持:** 経験則に頼らず、VTA（Visual Tree Assessment）および精密機器による客観的データを基に判断を下す。
+    *   **継続的な技術向上:** 最新の樹病学知見や腐朽菌の分類体系（全65種等の最新データ）を常に更新し、技術研鑽に努める。
+    *   **診断結果に対する責任:** 自身の診断がもたらす社会的・経済的影響を自覚し、処方に対して専門家としての責任を負う。
 
-### 1. The EBD Standard Diagnostic Flow: A Five-Stage Framework
-The diagnostic process must proceed systematically from historical site analysis to final synthesis. Management decisions lacking this objective data progression are clinically invalid.
+## 2. EBD標準診断フロー：5段階の診断ステップ
+科学的根拠に基づく診断（Evidence Based Diagnosis）を完遂するため、以下の5ステップを厳守せよ。
 
-*   **Stage 1: Preliminary Investigation (予備調査)**
-    Gathering essential baseline data: **Estimated age (推定樹齢)**, **Root collar circumference (根元周)**, and **Site location factors (立地場所)**. Practitioners must evaluate the tree's historical exposure to inducing factors (誘発要因) and potential pathogen entry routes.
-*   **Stage 2: Visual Diagnostic Assessment (外観診断)**
-    Application of the Visual Tree Assessment (VTA) method. Focus on identifying external symptoms (fruiting bodies, cracks, and localized swelling) that signal internal structural compromises.
-*   **Stage 3: Precision Diagnostic Assessment (精密診断)**
-    Transition to instrumental analysis to quantify the internal cross-section and density of the wood.
-*   **Stage 4: Risk Evaluation (危険度判定)**
-    Data comparison against quantitative safety thresholds to determine the probability of failure and the "target" impact zone.
-*   **Stage 5: Comprehensive Diagnosis & Prescription (総合判定処方)**
-    Final synthesis of all data stages to issue management orders, ranging from conservative monitoring to immediate surgical intervention or removal.
+1.  **予備調査:** 
+    *   立地環境（踏固め、埋設物の有無）、樹歴、過去の自然災害履歴を精査する。特に過去の強風時の挙動や周辺の施工履歴を重視すること。
+2.  **外観診断（VTA手法）:** 
+    *   樹冠（葉量、枯れ枝）、幹（肥大成長の異常、亀裂、腐朽孔）、根系（根上がり、土壌の浮き）を視覚的に観察する。
+    *   子実体（キノコ）の発生部位（根株・幹・枝）を特定し、侵入経路と腐朽範囲を予見する。
+3.  **精密診断:** 
+    *   外観診断で構造的欠陥が疑われる場合、機器を用いて腐朽の深さ、範囲、残存強度を定量測定する。
+4.  **危険度判定:** 
+    *   物理的強度（t/R比）と生理的活力（衰退度ランク）を組み合わせ、総合的な倒伏・折損リスクを評価する。
+5.  **総合判定・処方:** 
+    *   診断データに基づき、経過観察、樹勢回復、剪定、または緊急伐採等の管理計画を策定する。
 
----
+## 3. 精密診断機器の特性と用途
+診断の精度を担保するため、非破壊および半破壊の機器を適切に使い分ける。
 
-### 2. Precision Diagnostic Instrumentation and Field Application
-When visual indicators suggest internal degradation, the following instruments are utilized to map internal wood density and residual strength.
-
-| Equipment Name | Methodology Type | Primary Diagnostic Utility |
+| 機器名 | 主な用途 | 診断上の特徴（非破壊/半破壊） |
 | :--- | :--- | :--- |
-| **Resistograph (レジストグラフ)** | Semi-destructive (半非破壊式) | Measures drilling resistance of a micro-needle to map internal density and locate cavities. |
-| **PiCUS Sonic Tomograph** | Semi-destructive (半非破壊式) | Uses sound wave velocity via an **Impulse Hammer (インパルスハンマー)** to create a 2D/3D visualization of internal wood decay. |
-| **Gamma-ray Detector (γ線)** | Non-destructive (非破壊式) | Employs radiation absorption metrics to assess wood density without physical penetration. |
-| **Increment Borer & Fractometer** | Sampling | Extracts core samples for ring-count analysis and measures fiber strength of extracted wood. |
-| **Air Spade (エアースコップ)** | Non-destructive | Excavates the root collar (根株) using compressed air to inspect for root-system decay (根株腐朽) without mechanical root injury. |
+| **レジストグラフ** | 木材内部の穿孔抵抗測定 | 半破壊式。抵抗値の変化から心材腐朽の範囲をミリ単位で特定。 |
+| **PiCUS（音波貫通断層装置）** | 多点断面の音波伝搬診断 | 半破壊式（釘打ち要）。音波速度差により腐朽・空洞を画像化。 |
+| **γ線樹木腐朽診断器** | 密度の差異による断層診断 | 非破壊式。密度の違いを透過量の差として捉える。 |
+| **生長錐・フラクトメーター** | 木片採取と木材強度の測定 | 半破壊式。コアから腐朽進展度を直接確認し、力学的強度を測定。 |
+| **エアースコップ** | 根系の露出調査 | 非破壊式。圧縮空気により根を傷つけず土壌を排出し、根系腐朽を視認。 |
 
----
+## 4. 危険度評価と衰退度ランク別管理措置
+構造的安全性の指標として**t/R比**（殻厚t / 半径R）を用い、生理的状態と組み合わせて判定する。
 
-### 3. Quantitative Risk Assessment: t/R Ratio and Decline Ranking
-Structural safety is defined by the relationship between sound residual wood and the total radius of the trunk.
+*   **t/R比による判定基準**
+    *   **t/R < 0.3〜0.35:** 構造的強度が著しく低下。支持力不足による倒伏の危険性が極めて高い（危険しきい値）。
+*   **衰退度ランク別管理措置**
+    *   **ランク0（健全）:** 枝葉が密生し、異常なし。3〜5年ごとの定期点検。
+    *   **ランク1（初期衰退）:** 樹冠上部に一部枯枝、葉色にわずかな変色。土壌改良、マルチング。
+    *   **ランク2（中期衰退）:** 枝先からの枯れ上がり、葉量の減少（正常時の60%程度）。施肥、踏固め解消、不定根誘導。
+    *   **ランク3（重度衰退）:** 大枝の枯死、幹への腐朽菌侵入、葉量の著しい減少。剪定による重量軽減、支柱設置、周辺への立入制限。
+    *   **ランク4（枯死寸前・枯死）:** 葉の消失、樹皮の剥離。緊急伐採、樹種更新。
 
-#### The t/R Ratio Principle
-For stems with internal cavities, structural stability is calculated by the ratio of the thickness of sound residual wood (**t**) to the total radius (**R**). 
-*   **Threshold:** A quantitative safety limit of **t/R > 0.3 to 0.35** must be maintained. If the residual shell thickness 't' drops below 30% of the radius 'R', the risk of catastrophic buckling or trunk failure is severe.
+## 5. CODIT理論に基づく治療処置原則
+アレックス・シゴのCODIT（樹木における腐朽区画化理論）に基づき、樹木の固有防御反応を尊重した処置を行う。
 
-#### Decline Ranks (0-4)
-*   **Rank 0: Healthy/Stable** – Routine monitoring required.
-*   **Rank 1: Initial Decline** – Minor physiological stress; periodic observation.
-*   **Rank 2: Moderate Decline** – Visible health stressors; implement environmental improvements (e.g., soil aeration).
-*   **Rank 3: Severe Decline** – Significant structural defects; immediate corrective treatment or crown reduction required.
-*   **Rank 4: Critical/Dead** – High failure risk or tree mortality; necessitates immediate removal or exclusion zone.
+*   **壁1〜4の概念**
+    *   **壁1（上下方向）:** 通導組織（道管等）を塞ぎ、腐朽の上下拡大を阻止。最も脆弱。
+    *   **壁2（内側方向）:** 年輪（晩材層）により、腐朽の向心的な拡大を阻止。
+    *   **壁3（側面方向）:** 放射組織により、腐朽の円周方向への拡大を阻止。
+    *   **壁4（バリアゾーン）:** 傷害後に形成層から作られる新たな組織。腐朽の「新材」への移行を完全に遮断。最強の防御壁。
+*   **処置原則**
+    *   **過度な外科手術の回避:** 腐朽部を完全に削り取る処置は壁4を破壊し、健全部に感染を広げるリスクがあるため原則禁止。
+    *   **樹勢回復優先:** 樹木自らが区画化（封じ込め）を行えるよう、光合成環境の改善と根圏環境の整備を最優先する。
+    *   **不定根誘導:** 辺材腐朽により通導機能が阻害されている場合、ミズゴケ等を用いた不定根誘導により補完を行う。
 
----
+## 6. 腐朽以外の主要病虫害と環境ストレスの鑑別
+現場では腐朽病害と生理的障害、虫害を混同してはならない。
 
-### 4. Treatment Protocols and the CODIT Principles
-Treatment strategies must align with the tree's biological process of **Compartmentalization of Decay in Trees (CODIT)**. Trees do not "heal" but rather isolate pathogens using four distinct "walls":
+*   **主要病虫害の徴候**
+    *   **萎凋病:** 急激な葉の萎凋。導管詰まりを確認。
+    *   **さび病・炭疽病:** 葉身への病斑、胞子堆の形成。
+    *   **穿孔性害虫（カミキリムシ、キクイムシ類）:** 幹への排糞孔（フラス）、特有の脱出痕。
+*   **環境ストレスと生理障害**
+    *   **深植え・踏固め:** 酸素欠乏による根端の死滅。不定根の異常発生。
+    *   **塩害・乾燥:** 葉縁からの褐変。
+*   **鑑別フロー**
+    *   冠部全体の衰退がある場合：まず根圏（踏固め、埋設物、深植え）を確認せよ。
+    *   局所的な枝枯れがある場合：腐朽菌の子実体、または穿孔性害虫のフラスを確認せよ。
+    *   **ホスト specificity:** 針葉樹はグアイアシリルリグニン（難分解性）を多く含むため、褐色腐朽菌（カイメンタケ等）の発生に特に留意すること。広葉樹はシリンギルリグニンを含み、白色腐朽菌の頻度が高い。
 
-1.  **Wall 1:** Plugging of vascular tissues (vessels/tracheids) to prevent vertical spread.
-2.  **Wall 2:** The latest-formed growth ring, preventing inward spread toward the pith.
-3.  **Wall 3:** Ray cells that inhibit lateral spread through the circumference.
-4.  **Wall 4:** The **Barrier Zone** (the most critical wall), formed by the cambium after injury to separate infected wood from healthy new growth.
+## 7. 剪定の生理学的原則
+誤った剪定は腐朽の最大の誘因である。「人為的被害の防止」を徹底せよ。
 
-**Prescription Principle:** Any surgical intervention must respect the **Reaction Zone** boundaries. Practitioners are strictly forbidden from injuring existing barrier zones during cavity management or pruning.
+*   **剪定位置:** 
+    *   **ブランチ・バーク・リッジ（BBR）**と**ブランチ・カラー**を絶対に傷つけない。カラーを残すことで、壁4を含む防御壁の形成が促進される。
+*   **剪定時期:** 
+    *   原則として樹種別の生理的休眠期（落葉広葉樹なら冬季）に行う。萌芽期直後の剪定はエネルギー消費が激しく、防御反応を弱めるため避けるべきである。
+*   **禁忌事項（ぶつ切り/トッピング）:** 
+    *   主幹や太枝の途中での切断は、大規模な腐朽（壁1の破壊）を招き、構造的に不安定な「ひこばえ（胴吹き枝）」を量産するため厳禁とする。
 
----
+## 8. 付録：代表的な木材腐朽菌の簡易検索表
+『緑化樹木腐朽病害ハンドブック』に基づき、現場で迅速に特定するためのヒントを記す。
 
-### 5. Differential Diagnosis: Decay, Pests, and Environmental Stress
-Effective pathology requires a molecular and chemical understanding of decay.
+| 発生部位 | 菌名（代表例） | 腐朽型と特徴 | 診断上の重要ポイント |
+| :--- | :--- | :--- | :--- |
+| **針葉樹・根株** | **カイメンタケ** | 褐色・心材 | 針葉樹で出現頻度・腐朽力ともに最大。倒伏注意。 |
+| **針葉樹・幹** | **アオゾメタケ** | 白色・心材 | 子実体は肉厚、生時は青みを帯びる。 |
+| **広葉樹・根株** | **ベッコウタケ** | 白色・心材 | 公園・街路樹で多発。エンジュ、ニセアカシアに多い。 |
+| **広葉樹・根株** | **ナラタケ** | 白色・心材 | 黒色の根状菌糸束（ハルチヒ）が樹皮下にあるか確認。 |
+| **広葉樹・幹/枝** | **コフキタケ** | 白色・心材 | 多年生で極めて硬い。傘表面の茶色の粉（胞子）が特徴。 |
+| **広葉樹・辺材** | **辺材腐朽菌群** | 白色/褐色・辺材 | **萎凋症状**に直結。形成層が侵されるため、生理的緊急性が高い。 |
 
-#### Major Wood-Decay Groups and Chemical Rationale
-Wood is composed of cellulose, hemicellulose, and lignin.
-*   **White Rot (白色腐朽):** Simultaneous decomposition of lignin and cellulose. Example: **Kretzschmaria deusta (オオミコブタケ)**, which often targets the root collar, leading to brittle failure.
-*   **Brown Rot (褐色腐朽):** Decomposition of cellulose only. Example: **Fistulina hepatica (カンゾウタケ)**. Note that conifers primarily contain **Guaiacyl lignin**, which is more resistant to enzymatic breakdown, explaining the disproportionate frequency of brown rot in needle-leaved species.
-*   **Sapwood Decay (辺材腐朽):** Attacks the living outer layers and cambium. A primary diagnostic indicator is the presence of **"slime flux" or "canker-like symptoms" (潰瘍症状)**, often resulting in rapid physiological decline compared to heartwood decay.
-
-#### Environmental Stressors
-Distinguish decay from abiotic stressors such as **Soil Compaction** (high mechanical resistance) or **Water Stress** (marginal leaf scorch), which require environmental remediation rather than pathological intervention.
-
----
-
-### 6. Physiological Pruning Principles and Professional Ethics
-Arboreal surgery must be executed with biological precision. 
-
-*   **Physiological Pruning:** Cuts must be made outside the **Branch Bark Ridge** and **Branch Collar**. This preserves the biological "shoulder" that is genetically programmed to form **Wall 4 (the Barrier Zone)**. 
-*   **Ethics of Intervention:** **Flush cuts** (cutting into the collar) are a violation of the Tree Doctor’s Code of Ethics. They destroy the tree’s natural defense zone and facilitate rapid fungal entry into the main stem.
-*   **Professional Responsibility:** Prioritize public safety (prevention of tree-fall accidents) while maintaining the aesthetic and ecological value of the landscape.
-
-#### Final Practical Guideline: Field Report Checklist
-*   [ ] Consult the handbook's identification key for the 65 specific wood-decay species.
-*   [ ] Identify rot type (White vs. Brown) and consider wood chemistry (e.g., Guaiacyl lignin).
-*   [ ] Document Sapwood Decay symptoms (e.g., 潰瘍症状/slime flux) if present.
-*   [ ] Calculate structural safety (t/R ratio) for all hollowed specimens; verify if $t/R < 0.3$.
-*   [ ] Assign Decline Rank (0-4) with prescriptive management actions.
-*   [ ] Ensure all pruning orders explicitly prohibit flush cuts and mandate the Branch Collar method.[PER]
-
----
-**Senior Forest Pathologist and Certified Master Tree Doctor**
-[END OF DOCUMENT]
+**専門的洞察:** 
+辺材部（Sapwood）の腐朽は、単なる支持力の低下にとどまらず、水分供給を遮断し樹勢を急速に衰退させる（Image 11）。診断時には、腐朽が「心材」に留まっているか「辺材」まで波及しているかを、必ず精密診断によって峻別すること。
