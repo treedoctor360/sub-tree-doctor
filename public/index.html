@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>サブ樹木医システム</title>
+<meta name="description" content="樹木医必携の2冊を土台にしたEBD診断フロー・t/R危険度判定・精密診断機器・基礎知識ベース">
+</head>
+<body>
+<style>
+  :root {
+    color-scheme: light dark;
+    /* light theme (warm paper with a green-brown bias) */
+    --bg: #F3F1E7;
+    --surface: #FBFAF3;
+    --surface-2: #F0EEE2;
+    --ink: #23271E;
+    --muted: #5E675A;
+    --faint: #8A9182;
+    --line: #DBD9C9;
+    --line-strong: #C7C6B3;
+    --accent: #2F6B3E;      /* cambium / leaf green */
+    --accent-ink: #21502E;
+    --accent-soft: #E4EDDF;
+    --bark: #8A5A2B;        /* heartwood / bark */
+    --bark-soft: #EFE4D4;
+    /* severity (semantic, distinct from accent) */
+    --ok: #2F7D4F;
+    --caution: #B8860B;
+    --treat: #C4600F;
+    --danger: #B23025;
+    --ok-soft: #E3EEE4;
+    --caution-soft: #F3EACF;
+    --treat-soft: #F5E3D2;
+    --danger-soft: #F2DAD5;
+    --shadow: 0 1px 2px rgba(30,35,25,.05), 0 6px 20px rgba(30,35,25,.06);
+    --radius: 12px;
+    --font-sans: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+    --font-serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "MS PMincho", serif;
+    --font-num: ui-monospace, "SFMono-Regular", "Menlo", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14170F;
+      --surface: #1D2117;
+      --surface-2: #232719;
+      --ink: #E9EADF;
+      --muted: #A0A995;
+      --faint: #7B856F;
+      --line: #2E3325;
+      --line-strong: #3C4230;
+      --accent: #74BC83;
+      --accent-ink: #A6D8B0;
+      --accent-soft: #223026;
+      --bark: #C79A63;
+      --bark-soft: #2C2519;
+      --ok: #6FBD84;
+      --caution: #D6AD48;
+      --treat: #E0864A;
+      --danger: #E1685C;
+      --ok-soft: #213026;
+      --caution-soft: #2E2916;
+      --treat-soft: #2E2015;
+      --danger-soft: #301B18;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  /* explicit toggle wins in both directions */
+  :root[data-theme="light"] {
+    --bg: #F3F1E7; --surface: #FBFAF3; --surface-2: #F0EEE2; --ink: #23271E;
+    --muted: #5E675A; --faint: #8A9182; --line: #DBD9C9; --line-strong: #C7C6B3;
+    --accent: #2F6B3E; --accent-ink: #21502E; --accent-soft: #E4EDDF; --bark: #8A5A2B; --bark-soft: #EFE4D4;
+    --ok:#2F7D4F; --caution:#B8860B; --treat:#C4600F; --danger:#B23025;
+    --ok-soft:#E3EEE4; --caution-soft:#F3EACF; --treat-soft:#F5E3D2; --danger-soft:#F2DAD5;
+    --shadow: 0 1px 2px rgba(30,35,25,.05), 0 6px 20px rgba(30,35,25,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #14170F; --surface: #1D2117; --surface-2: #232719; --ink: #E9EADF;
+    --muted: #A0A995; --faint: #7B856F; --line: #2E3325; --line-strong: #3C4230;
+    --accent: #74BC83; --accent-ink: #A6D8B0; --accent-soft: #223026; --bark: #C79A63; --bark-soft: #2C2519;
+    --ok:#6FBD84; --caution:#D6AD48; --treat:#E0864A; --danger:#E1685C;
+    --ok-soft:#213026; --caution-soft:#2E2916; --treat-soft:#2E2015; --danger-soft:#301B18;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  .std { font-family: var(--font-sans); color: var(--ink); background: var(--bg);
+    line-height: 1.7; -webkit-font-smoothing: antialiased; font-size: 16px;
+    min-height: 100vh; }
+  .std h1,.std h2,.std h3 { text-wrap: balance; margin: 0; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---- header ---- */
+  header.top { border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--surface), var(--bg));
+    position: relative; overflow: hidden; }
+  .top .wrap { padding-top: 30px; padding-bottom: 22px; }
+  .eyebrow { font-family: var(--font-serif); letter-spacing: .18em; text-transform: none;
+    color: var(--bark); font-size: .78rem; font-weight: 600; }
+  h1.title { font-family: var(--font-serif); font-weight: 600; font-size: clamp(1.7rem, 4.5vw, 2.5rem);
+    letter-spacing: .01em; margin: 6px 0 4px; }
+  .subtitle { color: var(--muted); font-size: .96rem; max-width: 60ch; }
+  .rings { position: absolute; right: -70px; top: -70px; width: 260px; height: 260px;
+    opacity: .5; pointer-events: none; }
+  .theme-btn { position: absolute; top: 18px; right: 18px; z-index: 3;
+    background: var(--surface); border: 1px solid var(--line-strong); color: var(--muted);
+    border-radius: 999px; padding: 6px 12px; font-size: .8rem; cursor: pointer;
+    font-family: var(--font-sans); display: inline-flex; gap: 6px; align-items: center; }
+  .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---- tabs ---- */
+  nav.tabs { position: sticky; top: 0; z-index: 5; background: var(--bg);
+    border-bottom: 1px solid var(--line); }
+  .tabs .wrap { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: thin; }
+  .tab { flex: 0 0 auto; background: none; border: none; cursor: pointer;
+    font-family: var(--font-sans); font-size: .92rem; color: var(--muted);
+    padding: 13px 15px 11px; border-bottom: 2.5px solid transparent; white-space: nowrap; }
+  .tab .n { font-family: var(--font-num); font-size: .72rem; color: var(--faint); margin-right: 6px; }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] { color: var(--accent-ink); border-bottom-color: var(--accent);
+    font-weight: 600; }
+  .tab[aria-selected="true"] .n { color: var(--accent); }
+
+  main { padding: 28px 0 72px; }
+  .panel { display: none; animation: fade .25s ease; }
+  .panel[data-active] { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .panel, .panel[data-active] { animation: none; } }
+
+  .lead { color: var(--muted); max-width: 66ch; margin: 0 0 22px; }
+  h2.sec { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 600;
+    margin: 0 0 4px; display: flex; align-items: baseline; gap: 10px; }
+  h2.sec::before { content: ""; width: 9px; height: 9px; border-radius: 2px;
+    background: var(--accent); display: inline-block; transform: translateY(-1px); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 20px 22px; }
+  .grid { display: grid; gap: 16px; }
+
+  /* ---- EBD flow ---- */
+  .flow { display: grid; gap: 12px; }
+  .stage { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    overflow: hidden; }
+  .stage-head { display: flex; align-items: center; gap: 14px; padding: 15px 18px; cursor: pointer;
+    width: 100%; background: none; border: none; text-align: left; font-family: var(--font-sans);
+    color: var(--ink); }
+  .stage-num { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center; font-family: var(--font-num); font-weight: 600;
+    background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent);
+    font-size: .95rem; }
+  .stage-title { font-weight: 600; font-size: 1.02rem; flex: 1; }
+  .stage-title small { display: block; font-weight: 400; color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  .chev { color: var(--faint); transition: transform .2s; }
+  .stage[open] .chev { transform: rotate(90deg); }
+  .stage-body { padding: 0 18px 18px 66px; display: none; }
+  .stage[open] .stage-body { display: block; }
+  .check { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; cursor: pointer; }
+  .check input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; flex: 0 0 auto; }
+  .check span { font-size: .93rem; }
+  .check.done span { color: var(--faint); text-decoration: line-through; }
+  .tool-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag { font-size: .74rem; background: var(--bark-soft); color: var(--bark); border-radius: 999px;
+    padding: 3px 9px; font-weight: 600; }
+  .progress-row { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; flex-wrap: wrap; }
+  .bar { flex: 1; min-width: 160px; height: 8px; background: var(--surface-2); border-radius: 999px;
+    overflow: hidden; border: 1px solid var(--line); }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  .reset { background: none; border: 1px solid var(--line-strong); color: var(--muted);
+    border-radius: 8px; padding: 5px 11px; font-size: .8rem; cursor: pointer; font-family: var(--font-sans); }
+  .reset:hover { color: var(--danger); border-color: var(--danger); }
+
+  /* ---- calculator ---- */
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 720px) { .calc-grid { grid-template-columns: 1fr; } .calc-viz { order: -1; } }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
+  .field .hint { font-weight: 400; color: var(--faint); font-size: .78rem; }
+  .field input[type=number] { width: 100%; padding: 10px 12px; font-size: 1rem; font-family: var(--font-num);
+    background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; color: var(--ink); }
+  .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-row label { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem;
+    background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px;
+    padding: 7px 11px; cursor: pointer; color: var(--ink); font-weight: 400; }
+  .radio-row input { accent-color: var(--accent); }
+  .result { margin-top: 4px; border-radius: var(--radius); padding: 18px; border: 1px solid var(--line);
+    background: var(--surface-2); }
+  .ratio { font-family: var(--font-num); font-size: 2.4rem; font-weight: 700; line-height: 1;
+    font-variant-numeric: tabular-nums; }
+  .ratio small { font-size: .9rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .verdict { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-weight: 700;
+    font-size: 1.05rem; padding: 6px 14px; border-radius: 999px; }
+  .verdict.ok { background: var(--ok-soft); color: var(--ok); }
+  .verdict.caution { background: var(--caution-soft); color: var(--caution); }
+  .verdict.treat { background: var(--treat-soft); color: var(--treat); }
+  .verdict.danger { background: var(--danger-soft); color: var(--danger); }
+  .verdict-note { margin-top: 12px; font-size: .9rem; color: var(--muted); }
+  .calc-viz { display: grid; place-items: center; }
+  .stem { position: relative; width: 210px; height: 210px; }
+  .stem svg { width: 100%; height: 100%; }
+
+  /* severity legend / rank table */
+  .rank { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .rank th, .rank td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .rank th { color: var(--muted); font-weight: 600; font-size: .8rem; }
+  .pill { display: inline-block; font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+  .pill.caution { background: var(--caution-soft); color: var(--caution); }
+  .pill.treat { background: var(--treat-soft); color: var(--treat); }
+  .pill.danger { background: var(--danger-soft); color: var(--danger); }
+
+  /* device reference */
+  .dev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 14px; }
+  .dev { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  .dev h3 { font-size: 1rem; font-family: var(--font-sans); margin-bottom: 4px; }
+  .dev .kind { font-size: .74rem; color: var(--bark); font-weight: 700; letter-spacing: .04em; }
+  .dev p { font-size: .88rem; color: var(--muted); margin: 6px 0 0; }
+
+  /* knowledge accordion */
+  .kb { display: grid; gap: 10px; }
+  .kb details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .kb summary { padding: 14px 18px; cursor: pointer; font-weight: 600; list-style: none;
+    display: flex; align-items: center; gap: 12px; }
+  .kb summary::-webkit-details-marker { display: none; }
+  .kb summary .kn { font-family: var(--font-num); font-size: .74rem; color: var(--accent);
+    background: var(--accent-soft); border-radius: 6px; padding: 2px 7px; }
+  .kb summary::after { content: "＋"; margin-left: auto; color: var(--faint); font-family: var(--font-num); }
+  .kb details[open] summary::after { content: "－"; }
+  .kb-body { padding: 2px 18px 18px; border-top: 1px solid var(--line); }
+  .kb-body h4 { font-family: var(--font-serif); font-size: 1rem; margin: 16px 0 6px; color: var(--accent-ink); }
+  .kb-body ul { margin: 6px 0; padding-left: 20px; }
+  .kb-body li { font-size: .92rem; margin: 4px 0; }
+  .kb-body p { font-size: .92rem; color: var(--ink); }
+  .kb-body strong { color: var(--ink); }
+  .wall { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 8px 0; }
+  .wall dt { font-family: var(--font-num); font-weight: 700; color: var(--accent-ink); }
+  .wall dd { margin: 0; font-size: .9rem; }
+
+  /* fungi table + app link */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+  table.fungi { border-collapse: collapse; width: 100%; min-width: 640px; font-size: .86rem; }
+  table.fungi th, table.fungi td { padding: 8px 11px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+  table.fungi th { position: sticky; top: 0; background: var(--surface-2); color: var(--muted);
+    font-size: .76rem; font-weight: 600; }
+  table.fungi tr:hover td { background: var(--surface-2); }
+  .risk-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  .app-link { display: flex; gap: 14px; align-items: center; background: var(--accent-soft);
+    border: 1px solid var(--accent); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 18px;
+    color: var(--accent-ink); text-decoration: none; }
+  .app-link:hover { box-shadow: var(--shadow); }
+  .app-link .arrow { margin-left: auto; font-size: 1.3rem; }
+  .app-link b { display: block; font-size: 1rem; }
+  .app-link span { font-size: .84rem; color: var(--muted); }
+
+  .callout { border-left: 3px solid var(--bark); background: var(--bark-soft); border-radius: 0 8px 8px 0;
+    padding: 12px 16px; margin: 16px 0; font-size: .9rem; }
+  .callout.warn { border-left-color: var(--danger); background: var(--danger-soft); }
+  .callout b { color: var(--ink); }
+
+  footer.foot { border-top: 1px solid var(--line); color: var(--faint); font-size: .82rem;
+    padding: 24px 0 40px; }
+  footer.foot .wrap { display: grid; gap: 6px; }
+  footer.foot a { color: var(--accent-ink); }
+</style>
+
+<div class="std">
+<header class="top">
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="テーマ切替">◐ <span id="themeLabel">テーマ</span></button>
+  <svg class="rings" viewBox="0 0 200 200" aria-hidden="true">
+    <g fill="none" stroke="var(--bark)" stroke-width="1.3" opacity="0.55">
+      <circle cx="100" cy="100" r="18"/><circle cx="100" cy="100" r="34"/>
+      <circle cx="100" cy="100" r="52"/><circle cx="100" cy="100" r="72"/>
+      <circle cx="100" cy="100" r="90"/>
+    </g>
+  </svg>
+  <div class="wrap">
+    <div class="eyebrow">樹木医必携 ／ Evidence-Based Diagnosis</div>
+    <h1 class="title">サブ樹木医システム</h1>
+    <p class="subtitle">「樹木医の手引き 第4版」と「緑化樹木腐朽病害ハンドブック」を土台に、外観診断から精密診断・危険度判定・処置までを支援する現地補助ツール。<b>最終判断は樹木医が行う。</b></p>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="機能">
+  <div class="wrap" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="flow"><span class="n">01</span>診断フロー</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="risk"><span class="n">02</span>危険度判定</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="device"><span class="n">03</span>精密診断機器</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="kb"><span class="n">04</span>基礎知識</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="fungi"><span class="n">05</span>腐朽菌</button>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap">
+
+  <!-- ============ 01 診断フロー ============ -->
+  <section class="panel" data-tab-panel="flow" data-active role="tabpanel">
+    <h2 class="sec">EBD 標準診断フロー</h2>
+    <p class="lead">科学的根拠に基づく診断（EBD）の5段階。各段のチェック項目を進めながら、使用する手法・機器を確認する。チェック状態はこの端末に保存される。</p>
+    <div class="progress-row">
+      <div class="bar"><i id="flowBar"></i></div>
+      <span id="flowCount" style="font-family:var(--font-num);font-size:.85rem;color:var(--muted);">0 / 0</span>
+      <button class="reset" id="flowReset" type="button">チェックをリセット</button>
+    </div>
+    <div class="flow" id="flow"></div>
+  </section>
+
+  <!-- ============ 02 危険度判定 ============ -->
+  <section class="panel" data-tab-panel="risk" role="tabpanel">
+    <h2 class="sec">危険度判定 ／ t/R 比</h2>
+    <p class="lead">精密診断で得た<b>残存健全材厚 t</b> と <b>幹半径 R</b> から倒木危険度の目安を算出する。VTA（Matteck）に基づき、一般に <b>t/R が 0.30〜0.35 を下回ると危険性が著しく上昇</b>する。<b>あくまで目安であり、開口空洞・偏心・樹種・立地を加味した総合判断が必要。</b></p>
+    <div class="card">
+      <div class="calc-grid">
+        <div>
+          <div class="field">
+            <label for="inT">残存健全材厚 t <span class="hint">（cm）最も薄い方向の健全材</span></label>
+            <input type="number" id="inT" min="0" step="0.1" value="6" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="inR">幹半径 R <span class="hint">（cm）＝ 幹直径 ÷ 2</span></label>
+            <input type="number" id="inR" min="0.1" step="0.1" value="25" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label>開口空洞の有無 <span class="hint">縦の開口はより危険側に評価</span></label>
+            <div class="radio-row">
+              <label><input type="radio" name="open" value="no" checked> なし（閉鎖空洞）</label>
+              <label><input type="radio" name="open" value="yes"> あり（開口空洞）</label>
+            </div>
+          </div>
+          <div class="result" id="riskResult">
+            <div class="ratio"><span id="ratioVal">0.24</span><small>t/R</small></div>
+            <div class="verdict danger" id="verdict">要警戒</div>
+            <div class="verdict-note" id="verdictNote"></div>
+          </div>
+        </div>
+        <div class="calc-viz">
+          <div class="stem">
+            <svg viewBox="0 0 200 200" id="stemSvg" aria-hidden="true">
+              <circle cx="100" cy="100" r="90" fill="var(--bark-soft)" stroke="var(--bark)" stroke-width="2"/>
+              <circle id="soundRing" cx="100" cy="100" r="90" fill="none" stroke="var(--accent)" stroke-width="0"/>
+              <circle id="hollow" cx="100" cy="100" r="40" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
+              <line id="tLine" x1="100" y1="10" x2="100" y2="40" stroke="var(--danger)" stroke-width="3"/>
+              <text x="100" y="196" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--font-num)">断面イメージ</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="sec" style="margin-top:30px;">危険度ランクと管理措置</h2>
+    <p class="lead">衰退度・力学的危険度に応じた措置の目安（樹木医の手引き）。</p>
+    <div class="card" style="padding:6px 8px;">
+      <table class="rank">
+        <thead><tr><th>ランク</th><th>状態の目安</th><th>主な管理措置</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill ok">健全 0</span></td><td>異常なし・樹勢旺盛</td><td>存置、定期通常点検</td></tr>
+          <tr><td><span class="pill caution">注意 1–2</span></td><td>軽微な腐朽・わずかな樹勢衰退</td><td>経過観察（モニタリング）、土壌改良</td></tr>
+          <tr><td><span class="pill treat">要治療 3</span></td><td>腐朽進行・樹勢不良</td><td>樹冠縮小剪定、治療、支柱による支持保護</td></tr>
+          <tr><td><span class="pill danger">危険 4</span></td><td>深刻な空洞・倒伏可能性大</td><td>緊急措置：大規模剪定、ワイヤー補強、伐採</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><b>処置の原則：</b>外科的処置は健全材との防御層（バリアゾーン）を傷つけない範囲に留め、殺菌剤塗布・乾燥促進を図る。支柱・ワイヤー（力学）、土壌改良・不定根誘導（生理）、樹冠縮小剪定（受風面減）を組み合わせる。CODITに反する安易な空洞完全閉鎖は避ける。</div>
+  </section>
+
+  <!-- ============ 03 精密診断機器 ============ -->
+  <section class="panel" data-tab-panel="device" role="tabpanel">
+    <h2 class="sec">精密診断機器リファレンス</h2>
+    <p class="lead">外観診断で当たりを付けた後、内部腐朽・材質強度・根系を定量する機器。目的に応じて選択する。</p>
+    <div class="dev-grid" id="devGrid"></div>
+  </section>
+
+  <!-- ============ 04 基礎知識 ============ -->
+  <section class="panel" data-tab-panel="kb" role="tabpanel">
+    <h2 class="sec">樹木医の基礎知識ベース</h2>
+    <p class="lead">診断の背景理解となる基礎科学と実務知識。「樹木医の手引き 第4版」より要約。</p>
+    <div class="kb" id="kb"></div>
+  </section>
+
+  <!-- ============ 05 腐朽菌 ============ -->
+  <section class="panel" data-tab-panel="fungi" role="tabpanel">
+    <h2 class="sec">主要木材腐朽菌クイックリファレンス</h2>
+    <p class="lead">診断時の当たり付け用の一覧。<b>詳細な同定は専用アプリに委ねる。</b></p>
+    <a class="app-link" href="https://treedoctor360.github.io/wood-decay-fungi/" target="_blank" rel="noopener">
+      <span style="font-size:1.6rem;">🍄</span>
+      <span><b>木材腐朽菌 絞り込みアプリ（65種＋写真AI候補出し）</b><span>宿主・部位・子実体の特徴、または写真から候補菌を絞り込み、記録を残す。判定者は樹木医。</span></span>
+      <span class="arrow">↗</span>
+    </a>
+    <div class="callout warn"><b>★ 褐色腐朽菌</b>（マツオウジ・アイカワタケ・カイメンタケ・マスタケ）は初期段階から曲げ強度が急落するため力学的危険度が高い。<b>▲ 根株腐朽菌</b>（ベッコウタケ・シマサルノコシカケ・ナラタケ・カイメンタケ・ニレサルノコシカケ）は外観に異常がなくても突然の根返りを招く。最優先で警戒する。</div>
+    <div class="table-scroll">
+      <table class="fungi" id="fungiTable">
+        <thead><tr>
+          <th>菌名</th><th>宿主</th><th>部位</th><th>持続性</th><th>質感</th><th>柄</th><th>子実層托</th><th>腐朽型</th><th>危険度</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div>出典：<b>樹木医の手引き 第4版</b>／<b>緑化樹木腐朽病害ハンドブック（木材腐朽菌図鑑）</b>（NotebookLM「樹木医必携」）</div>
+    <div>本ツールは診断の補助であり、危険度スコア・t/R比は目安。診断・処置の最終判断と責任は樹木医が負う。安全最優先・過剰治療の戒め・自然樹形の尊重（EBD倫理）。</div>
+    <div>関連：<a href="https://treedoctor360.github.io/wood-decay-fungi/" target="_blank" rel="noopener">木材腐朽菌 絞り込みアプリ ↗</a></div>
+  </div>
+</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- theme toggle ---------- */
+  var root = document.documentElement;
+  var tBtn = document.getElementById('themeBtn');
+  var tLabel = document.getElementById('themeLabel');
+  function sysDark(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function curTheme(){ return root.getAttribute('data-theme') || (sysDark() ? 'dark' : 'light'); }
+  function setLabel(){ tLabel.textContent = curTheme()==='dark' ? 'ライト' : 'ダーク'; }
+  tBtn.addEventListener('click', function(){
+    var next = curTheme()==='dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next); setLabel(); drawStem();
+  });
+  setLabel();
+
+  /* ---------- tabs ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('[data-tab-panel]'));
+  function activate(name){
+    tabs.forEach(function(t){ t.setAttribute('aria-selected', t.dataset.tab===name ? 'true':'false'); });
+    panels.forEach(function(p){ if(p.dataset.tabPanel===name){ p.setAttribute('data-active',''); } else { p.removeAttribute('data-active'); } });
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t.dataset.tab); }); });
+
+  /* ---------- EBD flow data ---------- */
+  var FLOW = [
+    { t:"予備調査・概況調査", s:"立地・履歴・樹種・寸法の把握",
+      items:["植栽履歴・周辺の土壌/気象条件・人為的負荷（踏圧・工事）を確認","樹種を正確に同定","樹高・幹周・枝張りなど基本寸法を測定"],
+      tools:["記録票","巻尺","測高器"] },
+    { t:"外観診断（一次診断）", s:"樹勢・VTA・病徴標徴・打診",
+      items:["樹勢判定：葉密度・葉色・当年枝の伸長量・梢端枯れ（5段階等）","VTA：内部腐朽/空洞への力学反応（膨らみ・亀裂）を肉眼観察","病徴・標徴：子実体（キノコ）・樹液漏出・葉の変色を確認","木槌打診：音の響きで空洞・樹皮剥離の当たりを付ける"],
+      tools:["目視","木槌","VTA"] },
+    { t:"精密診断（機器診断）", s:"内部腐朽・材質強度・根系の定量",
+      items:["穿孔抵抗（レジストグラフ）で空洞・腐朽範囲をmm単位計測","応力波/音波（PiCUS等）で内部をトモグラム化","必要に応じγ線で腐朽割合を非破壊予測","生長錐＋フラクトメーターで材質強度を確認","根株疑いはエアースコップで根系を直接目視"],
+      tools:["レジストグラフ","PiCUS","γ線","生長錐","エアースコップ"] },
+    { t:"危険度判定", s:"構造安定性・t/R比・開口空洞",
+      items:["残存健全材厚 t を測定し 幹半径 R と比較（t/R 比）","開口空洞の応力集中・縁の亀裂を評価","反応材（膨らみ）の形状から補強状況を読む","衰退度ランク（0〜4）に当てはめる"],
+      tools:["t/R評価","力学評価"] },
+    { t:"総合判定・処方箋", s:"生理×力学の統合と措置立案",
+      items:["生理面（樹勢）と力学面（危険度）を統合し、存置/治療/伐採を判断","処置を立案（外科的処置・支柱/ワイヤー・土壌改良・不定根誘導・樹冠縮小剪定）","依頼者へ目的・リスクを説明（説明責任）","モニタリング（定期点検項目）を計画","診断結果を正確に記録し臨床事例として蓄積"],
+      tools:["総合解析","処方箋","点検計画"] }
+  ];
+  var STORE_KEY = "subtreedoc.flow.v1";
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch(e){ state = {}; }
+  function saveState(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){} }
+
+  var flowEl = document.getElementById('flow');
+  var totalItems = 0;
+  FLOW.forEach(function(st, si){
+    totalItems += st.items.length;
+    var stage = document.createElement('div'); stage.className='stage'; if(si<2) stage.setAttribute('open','');
+    var head = document.createElement('button'); head.type='button'; head.className='stage-head';
+    head.innerHTML = '<span class="stage-num">'+(si+1)+'</span>'+
+      '<span class="stage-title">'+st.t+'<small>'+st.s+'</small></span>'+
+      '<span class="chev">▸</span>';
+    head.addEventListener('click', function(){ if(stage.hasAttribute('open')) stage.removeAttribute('open'); else stage.setAttribute('open',''); });
+    stage.appendChild(head);
+    var body = document.createElement('div'); body.className='stage-body';
+    st.items.forEach(function(it, ii){
+      var key = si+'-'+ii;
+      var lab = document.createElement('label'); lab.className='check';
+      var cb = document.createElement('input'); cb.type='checkbox'; cb.checked = !!state[key];
+      var sp = document.createElement('span'); sp.textContent = it;
+      if(cb.checked) lab.classList.add('done');
+      cb.addEventListener('change', function(){
+        state[key]=cb.checked; lab.classList.toggle('done', cb.checked); saveState(); updateBar();
+      });
+      lab.appendChild(cb); lab.appendChild(sp); body.appendChild(lab);
+    });
+    var tt = document.createElement('div'); tt.className='tool-tags';
+    st.tools.forEach(function(tool){ var g=document.createElement('span'); g.className='tag'; g.textContent=tool; tt.appendChild(g); });
+    body.appendChild(tt);
+    stage.appendChild(body); flowEl.appendChild(stage);
+  });
+  var bar = document.getElementById('flowBar'), cnt = document.getElementById('flowCount');
+  function updateBar(){
+    var done = 0; for(var k in state){ if(state[k]) done++; }
+    bar.style.width = totalItems ? (100*done/totalItems)+'%' : '0';
+    cnt.textContent = done + ' / ' + totalItems;
+  }
+  updateBar();
+  document.getElementById('flowReset').addEventListener('click', function(){
+    state = {}; saveState();
+    Array.prototype.forEach.call(flowEl.querySelectorAll('input[type=checkbox]'), function(cb){ cb.checked=false; cb.closest('.check').classList.remove('done'); });
+    updateBar();
+  });
+
+  /* ---------- t/R calculator ---------- */
+  var inT = document.getElementById('inT'), inR = document.getElementById('inR');
+  var ratioVal = document.getElementById('ratioVal'), verdict = document.getElementById('verdict'), vnote = document.getElementById('verdictNote');
+  function openState(){ var r = document.querySelector('input[name=open]:checked'); return r ? r.value : 'no'; }
+  function classify(ratio, open){
+    // effective threshold shifts up when open cavity present
+    var adj = open==='yes' ? 0.05 : 0;
+    if(ratio >= 0.45 - adj) return {c:'ok', t:'健全域', n:'構造的余裕は比較的大きい。定期点検を継続し、経年変化を追跡する。'};
+    if(ratio >= 0.35 - adj) return {c:'caution', t:'注意', n:'安全域の下限に近い。樹勢・立地・受風を加味し、モニタリングと土壌改良を検討する。'};
+    if(ratio >= 0.30 - adj) return {c:'treat', t:'要治療域', n:'一般的な危険域（0.30〜0.35）に入る。樹冠縮小剪定・支柱等の支持保護と精査を要する。'};
+    return {c:'danger', t:'要警戒', n:'危険域を下回る。倒伏・幹折れリスクが高い。緊急措置（大規模剪定・ワイヤー補強・伐採）を検討する。'};
+  }
+  function drawStem(){
+    var t = parseFloat(inT.value), r = parseFloat(inR.value);
+    var hollow = document.getElementById('hollow'), tLine = document.getElementById('tLine'), sound = document.getElementById('soundRing');
+    if(!(r>0)) return;
+    var ratio = t/r; if(ratio<0) ratio=0; if(ratio>1) ratio=1;
+    var R=90; // outer radius in svg units
+    var hollowR = Math.max(0, R*(1-ratio));
+    hollow.setAttribute('r', hollowR.toFixed(1));
+    // sound ring thickness = t band
+    sound.setAttribute('stroke-width', (R-hollowR).toFixed(1));
+    sound.setAttribute('r', ((R+hollowR)/2).toFixed(1));
+    sound.setAttribute('opacity','0.35');
+    tLine.setAttribute('y1', (100-R).toFixed(1)); tLine.setAttribute('y2', (100-hollowR).toFixed(1));
+  }
+  function recalc(){
+    var t = parseFloat(inT.value), r = parseFloat(inR.value);
+    if(!(r>0) || isNaN(t)){ ratioVal.textContent='—'; return; }
+    var ratio = t/r;
+    ratioVal.textContent = ratio.toFixed(2);
+    var v = classify(ratio, openState());
+    verdict.className = 'verdict '+v.c; verdict.textContent = v.t;
+    vnote.textContent = v.n + (openState()==='yes' ? '（開口空洞のため危険側に補正）' : '');
+    drawStem();
+  }
+  [inT,inR].forEach(function(el){ el.addEventListener('input', recalc); });
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=open]'), function(el){ el.addEventListener('change', recalc); });
+  recalc();
+
+  /* ---------- devices ---------- */
+  var DEV = [
+    { k:"内部腐朽・空洞", n:"穿孔抵抗測定（レジストグラフ）", p:"直径3mm程度のドリル貫入抵抗で内部の空洞・腐朽範囲をmm単位で測定（半非破壊）。" },
+    { k:"内部の可視化", n:"応力波・音波診断（PiCUS等）", p:"幹周のセンサー間の音波伝播速度から内部状態を断層画像（トモグラム）として可視化。" },
+    { k:"腐朽割合", n:"放射線診断（γ線）", p:"木材密度による透過量変化を利用し、非破壊で内部の腐朽割合を予測する。" },
+    { k:"材質強度", n:"生長錐 ＋ フラクトメーター", p:"生長錐でコアを採取し年輪・色を確認、フラクトメーターで曲げ強度・脆性を試験。" },
+    { k:"根系・地下部", n:"エアースコップ", p:"圧縮空気で根を傷めず土壌を掘削し、根株腐朽や根系の状態を直接目視で確認。" },
+    { k:"一次スクリーニング", n:"木槌打診 ＋ VTA", p:"打診音で空洞・樹皮剥離の当たりを付け、VTAで膨らみ・亀裂など力学反応を観察。" }
+  ];
+  var dg = document.getElementById('devGrid');
+  DEV.forEach(function(d){
+    var el = document.createElement('div'); el.className='dev';
+    el.innerHTML = '<div class="kind">'+d.k+'</div><h3>'+d.n+'</h3><p>'+d.p+'</p>';
+    dg.appendChild(el);
+  });
+
+  /* ---------- knowledge base ---------- */
+  var KB = [
+    { n:"生理", t:"樹木の生理・生態と CODIT", html:
+      '<h4>物質代謝と通導</h4><ul>'+
+      '<li><strong>光合成</strong>で糖（成長の稼ぎ）を作り、<strong>呼吸</strong>で分解しエネルギー化。<strong>蒸散</strong>が根の吸水を促す負圧を生む。</li>'+
+      '<li>木部（広葉樹＝<strong>道管</strong>／針葉樹＝<strong>仮道管</strong>）が水・無機養分を上昇、<strong>師部</strong>が糖を各部へ転流。</li>'+
+      '<li><strong>辺材</strong>＝通導・貯蔵の生組織／<strong>心材</strong>＝通導停止の死組織だがフェノール類で腐朽抵抗・支持を担う。</li>'+
+      '<li><strong>菌根菌</strong>は広範囲から水・リンを吸収して樹に供給し、樹は糖を供給する共生関係。</li></ul>'+
+      '<h4>CODIT（区画化）— 樹は「治る」のでなく腐朽を封じ込める</h4>'+
+      '<dl class="wall">'+
+      '<dt>Wall 1</dt><dd>道管/仮道管を閉塞し<strong>上下方向</strong>の拡大を防ぐ（最も弱い）</dd>'+
+      '<dt>Wall 2</dt><dd>年輪（晩材）が<strong>内側（中心）方向</strong>を防ぐ</dd>'+
+      '<dt>Wall 3</dt><dd>放射組織が<strong>横（円周）方向</strong>を防ぐ</dd>'+
+      '<dt>Wall 4</dt><dd><strong>バリアゾーン</strong>。損傷後に形成層が作る防御層で、新しく外側にできる材への侵入を強力に阻止（最強）</dd></dl>'+
+      '<h4>衰退のプロセス</h4><ul>'+
+      '<li><strong>病気発生のトライアングル</strong>：宿主の感受性＋病原体の病原性＋環境の好適性。</li>'+
+      '<li><strong>素因→誘因→主因</strong>の連鎖で衰退が進行。老樹は葉量に対し幹根が相対的に増え代謝バランスが崩れる。</li></ul>' },
+    { n:"構造", t:"構造と力学（バイオメカニクス）", html:
+      '<ul>'+
+      '<li><strong>枝の付け根</strong>：ブランチカラー(BC)・枝隆起線(BBR)に腐朽侵入を防ぐ<strong>保護帯</strong>があり、傷つけないのが剪定の鉄則。BCを削るフラッシュカットは致命的腐朽を招く。</li>'+
+      '<li><strong>均一応力の法則</strong>：応力を均一化するよう力の集中部を局部肥大させ補強（VTAの基盤）。</li>'+
+      '<li><strong>反応材</strong>：針葉樹＝傾斜の下側に圧縮あて材（押す）／広葉樹＝傾斜の上側に引張あて材（引く）。偏心成長はそのサイン。</li>'+
+      '<li><strong>根返り</strong>：根株・支持根が腐朽で強度を失い倒伏。外観正常でも地中の支持根腐朽で突然倒れ得る。</li>'+
+      '<li><strong>構造欠陥</strong>：入り皮（V字二又の挟み込み樹皮＝折損源）、裂け（入り皮・開口空洞の縁）、胴吹き（衰退・ストレス反応）。</li>'+
+      '<li><strong>手がかり</strong>：外観で膨らみを読む→精密診断で t を測り R と比較（t/R）。梢端枯れ・胴吹きは生理的衰退の指標。</li></ul>' },
+    { n:"病害", t:"病害（腐朽以外）", html:
+      '<ul>'+
+      '<li><strong>根頭がんしゅ病（細菌）</strong>：サクラ類・バラ科等。地際に腫瘍。土壌細菌が傷口から侵入。器具消毒・生物農薬で予防。</li>'+
+      '<li><strong>糸状菌病</strong>：うどんこ病・さび病（葉に白/橙の粉）、胴枯性/炭疽/葉枯（傷口・衰弱部から）、てんぐ巣病（枝がほうき状）、こうやく病（フェルト状菌糸膜）。通風改善剪定・殺菌剤・土壌改良。</li>'+
+      '<li><strong>マツ材線虫病（マツ枯れ）</strong>：媒介昆虫<strong>マツノマダラカミキリ</strong>の後食でマツノザイセンチュウ侵入→通水障害で夏秋に赤変枯死。媒介防除・樹幹注入・被害木の早期伐採焼却。</li>'+
+      '<li><strong>ウイルス・ファイトプラズマ</strong>：モザイク・萎縮・天狗巣。接木・吸汁昆虫が媒介。治療困難で罹病部除去が基本。</li></ul>' },
+    { n:"虫害", t:"虫害（加害様式別）", html:
+      '<ul>'+
+      '<li><strong>穿孔性</strong>（カミキリ・キクイムシ・スカシバ）：幹枝内部を食害。カシノナガキクイムシは「ナラ枯れ」を媒介。樹幹注入・産卵抑制・食入孔注入。</li>'+
+      '<li><strong>食葉性</strong>（アメリカシロヒトリ・チャドクガ・ハバチ）：葉食害で樹勢衰退、毒毛の人身被害も。初期の物理除去・BT剤。</li>'+
+      '<li><strong>吸汁性</strong>（カイガラムシ・アブラムシ・グンバイムシ）：変色・落葉、排泄物が「すす病」誘発。浸透移行性薬剤・冬季の機械油乳剤。</li>'+
+      '<li><strong>虫こぶ形成</strong>（タマバチ等）：枯死は稀。初期に摘み取り。</li>'+
+      '<li>全体は<strong>IPM</strong>（総合的病害虫管理）の考え方で。</li></ul>' },
+    { n:"環境", t:"環境ストレスと土壌診断", html:
+      '<ul>'+
+      '<li><strong>踏圧・固結</strong>：通気透水不良で根の呼吸阻害・吸収根死滅。エアーレーション・柵・地被。</li>'+
+      '<li><strong>乾燥/過湿</strong>：乾燥＝気孔閉鎖・キャビテーション／過湿＝根の窒息（根腐れ、ナラタケ病助長）。マルチング・灌水／排水整備。</li>'+
+      '<li><strong>塩害</strong>（潮風・凍結防止剤）：葉縁の変色・生理的乾燥。耐塩性樹種・防風林・洗い流し。</li>'+
+      '<li><strong>薬害・大気汚染</strong>：除草剤誤散布で急激枯死。適正使用・散布中止。</li>'+
+      '<li><strong>高温/低温</strong>：幹焼け・日焼け／凍害・霜害・凍裂。藁巻き・白塗剤・適地適木。</li>'+
+      '<li><strong>移植/深植え・物理損傷</strong>：吸収根不足・酸素欠乏・根系切断（腐朽の誘因）。根首出し・エアースコップ掘削・平滑な切戻し＋殺菌剤。</li></ul>'+
+      '<h4>土壌診断と改良</h4><ul>'+
+      '<li>診断：土壌硬度（長谷川式貫入計）・三相分布（気相率＝通気性）・pH・通気透水性。</li>'+
+      '<li>改良：縦穴/溝掘り/エアーレーション、完熟堆肥で団粒構造、マルチング、夏期の液肥。</li></ul>' },
+    { n:"剪定", t:"剪定と樹勢回復の原則", html:
+      '<ul>'+
+      '<li><strong>目的別</strong>：整姿・整枝／弱・強剪定／枝下げ・樹冠縮小（受風減・重心下げ）／枯枝除去（腐朽侵入源の早期除去）。</li>'+
+      '<li><strong>切除位置</strong>：BC/BBRを傷つけずその外側で切り、保護帯を残す。</li>'+
+      '<li><strong>時期</strong>：胞子飛散の夏秋を避け、休眠期の晩秋〜冬が望ましい。</li>'+
+      '<li><strong>切り口</strong>：鋭利に平滑、雨水滞留を防ぎ、必要に応じ殺菌剤入り塗布剤。</li>'+
+      '<li><strong>過度剪定の害</strong>：ぶつ切り/トッピングは区画化(CODIT)を阻害し幹深部へ急速腐朽、葉量急減で抵抗力低下→かえって枯死・倒伏を早める。</li></ul>' },
+    { n:"倫理", t:"樹木医の役割・倫理・制度", html:
+      '<ul>'+
+      '<li><strong>EBD</strong>：科学的根拠・客観データに基づく診断。<strong>記録と臨床事例の共有</strong>で技術向上。</li>'+
+      '<li><strong>説明責任</strong>：依頼者へ目的・リスクを十分説明し理解を得る。</li>'+
+      '<li><strong>倫理</strong>：安全最優先（人身・物財）、過剰治療の戒め（CODITに反する処置を控える）、自然な樹形の尊重。</li>'+
+      '<li><strong>制度・役割</strong>：天然記念物（文化財保護法）、保存樹・保存樹林、街路樹・公園樹の適正管理と倒木防止、後継樹育成（遺伝子保存）・環境教育。</li></ul>' }
+  ];
+  var kbEl = document.getElementById('kb');
+  KB.forEach(function(k, i){
+    var d = document.createElement('details'); if(i===0) d.setAttribute('open','');
+    d.innerHTML = '<summary><span class="kn">'+k.n+'</span>'+k.t+'</summary><div class="kb-body">'+k.html+'</div>';
+    kbEl.appendChild(d);
+  });
+
+  /* ---------- fungi table ---------- */
+  var FUNGI = [
+    ["コフキタケ","広葉樹","幹枝・地際","多年生","硬質(木質)","無柄","管孔状","白色","中〜高","treat"],
+    ["ベッコウタケ ▲","広葉樹(稀針)","根株地際","一年生","硬質(強靭)","無柄","管孔状","白色","極高","danger"],
+    ["カワラタケ","両方","幹枝","一年生","硬質(革質)","無柄","管孔状","白色","低〜中","caution"],
+    ["カワウソタケ","広葉樹","幹枝","一年生","軟質","無柄","管孔状","白色","中〜高","treat"],
+    ["シマサルノコシカケ ▲","両方","根株地際","多年生","硬質(木質)","無柄","管孔状","白色","極高","danger"],
+    ["ナラタケ ▲","両方","根株地際","一年生","軟質","有柄","ヒダ状","白色","高","danger"],
+    ["マツオウジ ★","針葉樹","幹枝","一年生","軟質","有柄","ヒダ状","褐色","高","danger"],
+    ["アイカワタケ ★","広葉樹","幹枝","一年生","軟質","無柄","管孔状","褐色","高","danger"],
+    ["カイメンタケ ★▲","針葉樹","根株地際","一年生","軟質","有/無柄","管孔状","褐色","高","danger"],
+    ["ツリガネタケ","広葉樹","幹枝","多年生","硬質(木質)","無柄","管孔状","白色","中","caution"],
+    ["シイサルノコシカケ","広葉樹","幹枝","多年生","硬質(木質)","無柄","管孔状","白色","中〜高","treat"],
+    ["ニレサルノコシカケ ▲","両方","根株地際","多年生","硬質","無柄","管孔状","白色","高","danger"],
+    ["マンネンタケ","広葉樹","根株地際","一年生","硬質(コルク)","有柄","管孔状","白色","中","caution"],
+    ["マスタケ ★","両方","幹枝","一年生","軟質","無柄","管孔状","褐色","高","danger"],
+    ["ヒイロタケ","両方","幹枝","一年生","硬質(コルク)","無柄","管孔状","白色","低","ok"]
+  ];
+  var colorMap = { ok:'var(--ok)', caution:'var(--caution)', treat:'var(--treat)', danger:'var(--danger)' };
+  var tb = document.querySelector('#fungiTable tbody');
+  FUNGI.forEach(function(row){
+    var tr = document.createElement('tr');
+    for(var i=0;i<8;i++){ var td=document.createElement('td'); td.textContent=row[i]; if(i===0) td.style.fontWeight='600'; tr.appendChild(td); }
+    var rk = document.createElement('td');
+    rk.innerHTML = '<span class="risk-dot" style="background:'+colorMap[row[9]]+'"></span>'+row[8];
+    tr.appendChild(rk); tb.appendChild(tr);
+  });
+
+})();
+</script>
+</body>
+</html>
