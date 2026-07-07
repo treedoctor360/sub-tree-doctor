@@ -23,7 +23,8 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
     setInput('');
     setBusy(true);
     try {
-      const reply = await askGemini(config.geminiRelayUrl, buildSystemInstruction(record), next);
+      const sys = await buildSystemInstruction(record, config, text);
+      const reply = await askGemini(config.geminiRelayUrl, sys, next);
       setMessages([...next, { role: 'model', text: reply }]);
     } catch (e) {
       setError(e.message);
@@ -39,7 +40,11 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
     setBusy(true);
     try {
       const hist = [...messages, { role: 'user', text: REPORT_INSTRUCTION }];
-      const reply = await askGemini(config.geminiRelayUrl, buildSystemInstruction(record), hist);
+      // 検索クエリは所見＋これまでの相談内容（要点）から組み立てる。
+      const query = [record.findings, ...messages.filter((m) => m.role === 'user').map((m) => m.text)]
+        .filter(Boolean).join(' ').slice(0, 1000);
+      const sys = await buildSystemInstruction(record, config, query);
+      const reply = await askGemini(config.geminiRelayUrl, sys, hist);
       onReport(parseReportJson(reply));
     } catch (e) {
       setError('レポート生成に失敗: ' + e.message);

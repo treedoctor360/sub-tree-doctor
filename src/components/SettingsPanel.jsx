@@ -9,7 +9,12 @@ export default function SettingsPanel({ config, update }) {
       <label className="field">
         <span>Geminiリレー URL（GAS）</span>
         <input value={config.geminiRelayUrl} onChange={(e) => update({ geminiRelayUrl: e.target.value })} />
-        <span className="hint">既定は wood-decay-fungi の透過中継を流用。専用に分ける場合はデプロイ後のURLに変更。</span>
+        <span className="hint">既定は wood-decay-fungi の透過中継を流用。RAG(知識ベース検索)を使うには gas/gemini-relay.gs をデプロイし、そのURL（embed対応の専用中継）に変更。</span>
+      </label>
+      <label className="field">
+        <span>知識ベースURL（埋め込みJSON・任意）</span>
+        <input value={config.kbEmbeddingsUrl} onChange={(e) => update({ kbEmbeddingsUrl: e.target.value })} placeholder="未設定なら内蔵の要約KBで動作します" />
+        <span className="hint">scripts/build-embeddings.mjs が作る knowledgeEmbeddings.json の配信URL。書籍本文を含むため非公開(Drive等)に置くこと。設定すると2冊本文を検索して回答します。</span>
       </label>
       <label className="field">
         <span>記録GAS URL（診断DB中継）</span>

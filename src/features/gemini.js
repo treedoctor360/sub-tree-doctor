@@ -34,6 +34,32 @@ export async function askGemini(relayUrl, systemInstruction, history) {
   return text;
 }
 
+/**
+ * RAG検索用: クエリ文を専用中継(gemini-relay.gs)経由で text-embedding-004 でベクトル化する。
+ * ※ 既定の共用中継(wood-decay-fungi)は embed 非対応。設定で専用中継URLに差し替えて使う。
+ * @param {string} relayUrl - Geminiリレー(GAS)のURL
+ * @param {string} text - 埋め込む文
+ * @returns {Promise<number[]>} 埋め込みベクトル
+ */
+export async function embedText(relayUrl, text) {
+  if (!relayUrl) throw new Error('Geminiリレー(GAS)のURLが未設定です。');
+  const res = await fetch(relayUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ embed: true, text }),
+  });
+  const raw = await res.text();
+  let data;
+  try { data = JSON.parse(raw); } catch { throw new Error('埋め込み中継応答の解析に失敗: ' + raw.slice(0, 200)); }
+  if (data.error) {
+    const detail = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+    throw new Error('埋め込み中継エラー: ' + detail);
+  }
+  const v = data?.embedding?.values;
+  if (!Array.isArray(v)) throw new Error('埋め込みベクトルが取得できませんでした（中継が embed 非対応の可能性）。');
+  return v;
+}
+
 // レポート用: 末尾にJSON出力を促し、パースして返す（失敗時は raw を consultReport に）。
 export function parseReportJson(text) {
   let s = text.trim();

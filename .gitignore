@@ -1,3 +1,10 @@
 _ref/
 node_modules/
 dist/
+
+# 書籍本文を含むため非公開（第三者の著作物）。公開リポジトリに置かない。
+knowledgeEmbeddings.json
+*_full.md
+tebiki_full.md
+handbook_full.md
+docs/ocr/out/

@@ -9,6 +9,9 @@ const DEFAULTS = {
   gasDbUrl: '',
   gasToken: '',
   inspector: '',
+  // RAGの知識ベース(knowledgeEmbeddings.json)の配信URL。非公開(Drive等)を想定。
+  // 未設定なら静的KB(knowledgeBase.js)にフォールバック。
+  kbEmbeddingsUrl: '',
 };
 
 export function loadConfig() {
