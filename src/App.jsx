@@ -5,7 +5,7 @@ import { evaluateRecord } from './logic/diagnosis.js';
 import { idbGetAll, idbPut, idbRemove } from './db/db.js';
 import { gasSaveRecords, gasGetAll } from './features/gasSync.js';
 import KartePanel from './components/KartePanel.jsx';
-import ChatPanel from './components/ChatPanel.jsx';
+import ChatFab from './components/ChatFab.jsx';
 import RecordList from './components/RecordList.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
 import ReferencePanel from './components/ReferencePanel.jsx';
@@ -24,12 +24,13 @@ function blankRecord() {
 }
 
 const TABS = [
-  ['chat', '対話'], ['karte', 'カルテ'], ['record', '記録'], ['ref', '参照'], ['settings', '設定'],
+  ['karte', 'カルテ'], ['record', '記録'], ['ref', '参照'], ['settings', '設定'],
 ];
 
 export default function App() {
   const [config, updateConfig] = useConfig();
-  const [tab, setTab] = useState('chat');
+  const [tab, setTab] = useState('karte');
+  const [chatOpen, setChatOpen] = useState(false);
   const [record, setRecord] = useState(blankRecord);
   const [messages, setMessages] = useState([]);
   const [records, setRecords] = useState([]);
@@ -115,18 +116,6 @@ export default function App() {
       </nav>
 
       <main className="main">
-        {tab === 'chat' && (
-          <div className="split">
-            <section className="pane karte-pane">
-              <h2 className="pane-title">カルテ</h2>
-              <KartePanel record={record} onChange={onKarteChange} />
-            </section>
-            <section className="pane chat-pane">
-              <ChatPanel config={config} record={record} messages={messages} setMessages={setMessages}
-                onReport={(d) => setDraft(d)} />
-            </section>
-          </div>
-        )}
         {tab === 'karte' && (
           <section className="pane"><KartePanel record={record} onChange={onKarteChange} /></section>
         )}
@@ -139,6 +128,9 @@ export default function App() {
         {tab === 'ref' && <section className="pane"><ReferencePanel /></section>}
         {tab === 'settings' && <section className="pane"><SettingsPanel config={config} update={updateConfig} /></section>}
       </main>
+
+      <ChatFab open={chatOpen} setOpen={setChatOpen} config={config} record={record}
+        messages={messages} setMessages={setMessages} onReport={(d) => setDraft(d)} />
 
       {draft ? <ReportModal draft={draft} onSave={saveReport} onClose={() => setDraft(null)} /> : null}
       {toast ? <div className="toast">{toast}</div> : null}

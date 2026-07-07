@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { askGemini, parseReportJson } from '../features/gemini.js';
 import { buildSystemInstruction, REPORT_INSTRUCTION } from '../logic/systemPrompt.js';
 
-const GREETING = 'サブ樹木医です。いま診ている木で、いちばん気になっている点を聞かせてください。カルテ（左）に総合判定や所見を入れておくと、それを踏まえて一緒に考えます。';
+const GREETING = 'サブ樹木医です。いま診ている木で、いちばん気になっている点を聞かせてください。カルテに総合判定や所見を入れておくと、それを踏まえて一緒に考えます。';
 
 export default function ChatPanel({ config, record, messages, setMessages, onReport }) {
   const [input, setInput] = useState('');
