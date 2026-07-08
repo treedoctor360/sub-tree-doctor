@@ -19,7 +19,8 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const MODEL = 'text-embedding-004';
+const MODEL = 'gemini-embedding-001';   // text-embedding-004 は廃止。後継の安定版。
+const OUTPUT_DIM = 768;                 // MRLで次元を縮約（既定3072はJSONが巨大に）。クエリ側(gemini-relay.gs)と必ず一致させること。
 const EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:embedContent`;
 const CHUNK = 600;     // 1チャンクの目安文字数
 const OVERLAP = 100;   // 前チャンクとの重複文字数（文脈切れ防止）
@@ -106,7 +107,12 @@ async function embed(text, key, attempt = 0) {
   const res = await fetch(`${EMBED_URL}?key=${key}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: `models/${MODEL}`, content: { parts: [{ text }] } }),
+    body: JSON.stringify({
+      model: `models/${MODEL}`,
+      content: { parts: [{ text }] },
+      taskType: 'RETRIEVAL_DOCUMENT',   // コーパス文書側。クエリ側は RETRIEVAL_QUERY。
+      outputDimensionality: OUTPUT_DIM,
+    }),
   });
   if (res.status === 429 && attempt < 5) {
     const wait = 2000 * (attempt + 1);
