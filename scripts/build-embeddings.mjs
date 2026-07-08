@@ -13,6 +13,9 @@
 //
 //   book キー: tebiki=樹木医の手引き4版 / handbook=緑化樹木腐朽病害ハンドブック
 //   OCRノートブックが挿入する <!-- batch NNNN-NNNN --> をページ範囲メタとして拾う。
+//
+//   --dry-run を付けると、埋め込みAPIを呼ばずチャンク分割の統計だけを表示する
+//   （GEMINI_API_KEY 不要・費用ゼロ。本実行前の確認用）。
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -32,6 +35,7 @@ const BOOK_META = {
 function parseArgs(argv) {
   const inputs = [];
   let out = './knowledgeEmbeddings.json';
+  let dryRun = false;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--in') {
       const [key, path] = String(argv[++i] || '').split('=');
@@ -40,10 +44,12 @@ function parseArgs(argv) {
       inputs.push({ key, path });
     } else if (argv[i] === '--out') {
       out = argv[++i];
+    } else if (argv[i] === '--dry-run') {
+      dryRun = true;
     }
   }
   if (!inputs.length) throw new Error('少なくとも1つ --in book=path を指定してください。');
-  return { inputs, out };
+  return { inputs, out, dryRun };
 }
 
 // OCR由来のノイズ除去（YomiTokuのエスケープ \(→( 等、余分な空白の圧縮）。
@@ -116,9 +122,9 @@ async function embed(text, key, attempt = 0) {
 }
 
 async function main() {
+  const { inputs, out, dryRun } = parseArgs(process.argv.slice(2));
   const key = process.env.GEMINI_API_KEY;
-  if (!key) { console.error('環境変数 GEMINI_API_KEY を設定してください。'); process.exit(1); }
-  const { inputs, out } = parseArgs(process.argv.slice(2));
+  if (!dryRun && !key) { console.error('環境変数 GEMINI_API_KEY を設定してください。'); process.exit(1); }
 
   // 1) 全書からチャンクを収集
   const chunks = [];
@@ -138,6 +144,27 @@ async function main() {
     }
     console.log(`${meta.book}: ${n} チャンク（${path}）`);
   }
+
+  // --dry-run: 埋め込みを回さず、分割結果の統計だけ出して終了（APIキー不要・費用ゼロ）
+  if (dryRun) {
+    const lens = chunks.map((c) => c.text.length);
+    const sum = lens.reduce((a, b) => a + b, 0);
+    const min = Math.min(...lens), max = Math.max(...lens);
+    const bySrc = {};
+    for (const c of chunks) bySrc[c.guideSource] = (bySrc[c.guideSource] || 0) + 1;
+    console.log('\n=== ドライラン結果（埋め込み未実行）===');
+    console.log(`合計チャンク数: ${chunks.length}`);
+    console.log(`文字数 平均/最小/最大: ${Math.round(sum / chunks.length)} / ${min} / ${max}`);
+    console.log('guideSource 別:', JSON.stringify(bySrc));
+    console.log('\n--- 先頭3チャンクのプレビュー ---');
+    for (const c of chunks.slice(0, 3)) {
+      console.log(`[${c.id}] batch=${c.pageBatch} section=「${c.section}」`);
+      console.log('  ' + c.text.slice(0, 80).replace(/\n/g, ' ') + '…');
+    }
+    console.log('\n問題なければ、--dry-run を外して本実行してください。');
+    return;
+  }
+
   console.log(`合計 ${chunks.length} チャンクを埋め込みます…`);
 
   // 2) 埋め込み付与
