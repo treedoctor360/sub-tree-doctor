@@ -128,6 +128,33 @@ async function embed(text, key, attempt = 0) {
   return v;
 }
 
+// float配列 → int8量子化 → base64。最大絶対値でスケールするだけ（コサインはスケール不変なので
+// スケール値は保存不要）。ベクトル本体を1/4以下に圧縮でき、検索品質はほぼ変わらない。
+function quantizeToB64(vec) {
+  let m = 0;
+  for (const x of vec) { const a = Math.abs(x); if (a > m) m = a; }
+  const s = m > 0 ? 127 / m : 0;
+  const buf = Buffer.alloc(vec.length);
+  for (let i = 0; i < vec.length; i++) {
+    let q = Math.round(vec[i] * s);
+    if (q > 127) q = 127; else if (q < -127) q = -127;
+    buf.writeInt8(q, i);
+  }
+  return buf.toString('base64');
+}
+
+// レジューム時に既存 out のベクトルを数値配列へ復元（float配列 or int8 base64 の両対応）。
+function decodeVec(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    const buf = Buffer.from(raw, 'base64');
+    const a = new Array(buf.length);
+    for (let i = 0; i < buf.length; i++) a[i] = buf.readInt8(i);
+    return a;
+  }
+  return null;
+}
+
 async function main() {
   const { inputs, out, dryRun } = parseArgs(process.argv.slice(2));
   const key = process.env.GEMINI_API_KEY;
@@ -177,7 +204,9 @@ async function main() {
   if (existsSync(out)) {
     try {
       const prev = JSON.parse(readFileSync(out, 'utf-8'));
-      const byId = new Map((prev.chunks || []).filter((c) => Array.isArray(c.vector)).map((c) => [c.id, c.vector]));
+      const byId = new Map((prev.chunks || [])
+        .map((c) => [c.id, decodeVec(c.vector)])
+        .filter(([, v]) => Array.isArray(v)));
       let restored = 0;
       for (const c of chunks) {
         const v = byId.get(c.id);
@@ -189,10 +218,17 @@ async function main() {
 
   const writeCheckpoint = (complete) => {
     const done = chunks.filter((c) => Array.isArray(c.vector));
+    // 完了時のみ int8+base64 に量子化して出力（配信サイズを1/4以下に）。
+    // 途中経過(complete:false)は float配列のまま保存し、レジュームを確実にする。
+    const outChunks = complete
+      ? chunks.map((c) => ({ ...c, vector: quantizeToB64(c.vector) }))
+      : done;
     const payload = {
       model: MODEL, dim, createdAt: new Date().toISOString(),
-      count: done.length, total: chunks.length, complete,
-      chunks: complete ? chunks : done,   // 未完了時はベクトルのある分だけ保存
+      count: outChunks.length, total: chunks.length, complete,
+      quant: complete ? 'int8' : undefined,      // 復元側(retrieve.js)が判定
+      encoding: complete ? 'base64' : undefined,
+      chunks: outChunks,
     };
     writeFileSync(out, JSON.stringify(payload), 'utf-8');
   };

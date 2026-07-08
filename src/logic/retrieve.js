@@ -38,6 +38,16 @@ function idbPut(entry) {
   }));
 }
 
+// int8+base64 のベクトルを Int8Array に復元。float配列(旧形式)ならそのまま返す。
+// コサインはスケール不変なので、量子化スケールを掛け戻さなくても類似度は一致する。
+function decodeVec(raw) {
+  if (typeof raw !== 'string') return raw; // 旧形式(float配列)
+  const bin = atob(raw);
+  const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Int8Array(u.buffer); // 符号付き8bitとして解釈
+}
+
 // コーパスをロード（メモリ→IndexedDB→ネットワークの順）。URLが変われば取り直す。
 async function loadCorpus(url) {
   if (memCache && memCache.url === url) return memCache;
@@ -49,7 +59,9 @@ async function loadCorpus(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`知識ベースの取得に失敗（${res.status}）`);
   const data = await res.json();
-  const entry = { url, model: data.model, dim: data.dim, chunks: data.chunks || [] };
+  // ベクトルを復元してからキャッシュ（TypedArrayはIndexedDBにそのまま保存できる）。
+  const chunks = (data.chunks || []).map((c) => ({ ...c, vector: decodeVec(c.vector) }));
+  const entry = { url, model: data.model, dim: data.dim, chunks };
   memCache = entry;
   try { await idbPut(entry); } catch { /* キャッシュ失敗は致命的でない */ }
   return entry;

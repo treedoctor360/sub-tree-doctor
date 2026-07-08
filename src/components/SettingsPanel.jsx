@@ -14,7 +14,7 @@ export default function SettingsPanel({ config, update }) {
       <label className="field">
         <span>知識ベースURL（埋め込みJSON・任意）</span>
         <input value={config.kbEmbeddingsUrl} onChange={(e) => update({ kbEmbeddingsUrl: e.target.value })} placeholder="未設定なら内蔵の要約KBで動作します" />
-        <span className="hint">scripts/build-embeddings.mjs が作る knowledgeEmbeddings.json の配信URL。書籍本文を含むため非公開(Drive等)に置くこと。設定すると2冊本文を検索して回答します。</span>
+        <span className="hint">knowledgeEmbeddings.json(int8量子化・約5MB)の配信URL。書籍本文を含むため非公開に置くこと。Drive直リンクはCORSで読めないため、gas/gemini-relay.gs を配信元にし、上のGeminiリレーURLと同じ /exec URL を入れるのが簡単（GETで配信）。初回のみ取得し端末内(IndexedDB)にキャッシュ。</span>
       </label>
       <label className="field">
         <span>記録GAS URL（診断DB中継）</span>

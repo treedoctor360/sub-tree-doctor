@@ -9,11 +9,15 @@
  * 【導入手順】
  *  1. GASプロジェクトを作成し本ファイルを貼り付け。
  *  2. プロジェクトの設定 → スクリプトプロパティに登録:
- *       GEMINI_API_KEY = Google AI Studio で発行した APIキー
- *       CHAT_MODEL     = gemini-2.5-flash（任意。未設定なら既定値）
- *       EMBED_MODEL    = gemini-embedding-001（任意。未設定なら既定値。build-embeddings.mjsと一致必須）
- *  3. デプロイ → 新しいデプロイ → 種類「ウェブアプリ」→ アクセス「全員」→ デプロイ。
- *  4. 発行URLをアプリの設定「Geminiリレー URL」に貼る（既定の共用中継から差し替え）。
+ *       GEMINI_API_KEY  = Google AI Studio で発行した APIキー
+ *       CHAT_MODEL      = gemini-2.5-flash（任意。未設定なら既定値）
+ *       EMBED_MODEL     = gemini-embedding-001（任意。未設定なら既定値。build-embeddings.mjsと一致必須）
+ *       CORPUS_FILE_ID  = 知識ベースJSON(knowledgeEmbeddings.json)を置いたDriveファイルのID（RAG配信用）
+ *  3. Driveに knowledgeEmbeddings.json をアップロードし、そのファイルIDを CORPUS_FILE_ID に設定。
+ *  4. デプロイ → 新しいデプロイ → 種類「ウェブアプリ」→ アクセス「全員」→ デプロイ。
+ *  5. 発行URL(/exec)をアプリ設定の「Geminiリレー URL」と「知識ベースURL」の両方に貼る。
+ *       - POST → 対話生成/クエリ埋め込み（doPost）
+ *       - GET  → 知識ベースJSONの配信（doGet, Driveから）
  *
  *  ※ リクエスト判定:
  *     - body.embed === true かつ body.text があれば embedContent（埋め込み）
@@ -33,6 +37,20 @@ function doPost(e){
     if(!key) return json({ error: 'GEMINI_API_KEY 未設定（スクリプトプロパティ）' });
     const body = JSON.parse(e.postData.contents);
     return (body && body.embed === true) ? embed(body, key) : generate(body, key);
+  }catch(err){ return json({ error: String(err) }); }
+}
+
+// --- 知識ベース(knowledgeEmbeddings.json)の配信 ---
+// GET でこのWebアプリURLにアクセスすると、Drive上の非公開JSON(int8量子化・約5MB)を返す。
+// Drive直リンクはCORSで弾かれるため、GAS経由で配信してブラウザから読めるようにする。
+// スクリプトプロパティ CORPUS_FILE_ID にDriveファイルのIDを設定すること。
+// アプリ設定の「知識ベースURL」に、この /exec のURLをそのまま登録する（POSTは対話/埋め込み、GETは配信）。
+function doGet(e){
+  try{
+    const id = PROP('CORPUS_FILE_ID');
+    if(!id) return json({ error: 'CORPUS_FILE_ID 未設定（スクリプトプロパティ）' });
+    const text = DriveApp.getFileById(id).getBlob().getDataAsString('UTF-8');
+    return ContentService.createTextOutput(text).setMimeType(ContentService.MimeType.JSON);
   }catch(err){ return json({ error: String(err) }); }
 }
 
