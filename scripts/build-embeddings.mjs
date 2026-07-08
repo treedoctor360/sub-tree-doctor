@@ -17,7 +17,7 @@
 //   --dry-run を付けると、埋め込みAPIを呼ばずチャンク分割の統計だけを表示する
 //   （GEMINI_API_KEY 不要・費用ゼロ。本実行前の確認用）。
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
 const MODEL = 'gemini-embedding-001';   // text-embedding-004 は廃止。後継の安定版。
 const OUTPUT_DIM = 768;                 // MRLで次元を縮約（既定3072はJSONが巨大に）。クエリ側(gemini-relay.gs)と必ず一致させること。
@@ -26,6 +26,7 @@ const CHUNK = 600;     // 1チャンクの目安文字数
 const OVERLAP = 100;   // 前チャンクとの重複文字数（文脈切れ防止）
 const MIN_LEN = 40;    // これ未満の断片は捨てる
 const SLEEP_MS = 200;  // 埋め込みAPIの間隔
+const CHECKPOINT_EVERY = 50;  // このチャンク数ごとに途中経過を out に保存（クォータ切れ・中断に備える）
 
 // book キーごとの既定メタ（体系タグ・出典）。HANDOFF §5 準拠。
 const BOOK_META = {
@@ -171,24 +172,57 @@ async function main() {
     return;
   }
 
-  console.log(`合計 ${chunks.length} チャンクを埋め込みます…`);
-
-  // 2) 埋め込み付与
+  // 2) レジューム: 既存の out から埋め込み済みベクトルを引き継ぐ（クォータ切れ後の続きから）
   let dim = 0;
-  for (let i = 0; i < chunks.length; i++) {
-    const v = await embed(chunks[i].text, key);
-    chunks[i].vector = v;
-    dim = v.length;
-    if ((i + 1) % 25 === 0 || i === chunks.length - 1) console.log(`  ${i + 1}/${chunks.length} 完了`);
-    await sleep(SLEEP_MS);
+  if (existsSync(out)) {
+    try {
+      const prev = JSON.parse(readFileSync(out, 'utf-8'));
+      const byId = new Map((prev.chunks || []).filter((c) => Array.isArray(c.vector)).map((c) => [c.id, c.vector]));
+      let restored = 0;
+      for (const c of chunks) {
+        const v = byId.get(c.id);
+        if (v) { c.vector = v; dim = v.length; restored++; }
+      }
+      if (restored) console.log(`既存 ${out} から ${restored} 件の埋め込みを再利用します（続きから実行）。`);
+    } catch { /* 壊れていれば無視して最初から */ }
   }
 
-  // 3) 出力
-  const payload = {
-    model: MODEL, dim, createdAt: new Date().toISOString(),
-    count: chunks.length, chunks,
+  const writeCheckpoint = (complete) => {
+    const done = chunks.filter((c) => Array.isArray(c.vector));
+    const payload = {
+      model: MODEL, dim, createdAt: new Date().toISOString(),
+      count: done.length, total: chunks.length, complete,
+      chunks: complete ? chunks : done,   // 未完了時はベクトルのある分だけ保存
+    };
+    writeFileSync(out, JSON.stringify(payload), 'utf-8');
   };
-  writeFileSync(out, JSON.stringify(payload), 'utf-8');
+
+  const remaining = chunks.filter((c) => !Array.isArray(c.vector));
+  console.log(`合計 ${chunks.length} チャンク中 ${remaining.length} 件を埋め込みます…`);
+
+  // 3) 埋め込み付与（CHECKPOINT_EVERY ごとに保存。429等で落ちても続きから再開できる）
+  let processed = 0;
+  try {
+    for (const c of chunks) {
+      if (Array.isArray(c.vector)) continue;
+      const v = await embed(c.text, key);
+      c.vector = v; dim = v.length; processed++;
+      const doneCount = chunks.length - remaining.length + processed;
+      if (processed % 25 === 0) console.log(`  ${doneCount}/${chunks.length} 完了`);
+      if (processed % CHECKPOINT_EVERY === 0) writeCheckpoint(false);
+      await sleep(SLEEP_MS);
+    }
+  } catch (e) {
+    writeCheckpoint(false);
+    const done = chunks.filter((c) => Array.isArray(c.vector)).length;
+    console.error(`\n中断: ${e.message}`);
+    console.error(`途中経過を保存しました: ${out}（${done}/${chunks.length} 件）。`);
+    console.error('同じコマンドを再実行すれば、続きから再開します（クォータ回復後 or 課金有効化後）。');
+    process.exit(1);
+  }
+
+  // 4) 完了・出力
+  writeCheckpoint(true);
   console.log(`書き出し完了: ${out}（${chunks.length}件 / ${dim}次元）`);
   console.log('※ このファイルは非公開。Drive等に置き、アプリの設定「知識ベースURL」に配信URLを登録してください。');
 }
