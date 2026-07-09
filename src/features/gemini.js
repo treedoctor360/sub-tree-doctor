@@ -4,15 +4,23 @@
 /**
  * @param {string} relayUrl - Geminiリレー(GAS)のURL
  * @param {string} systemInstruction - system_instruction のテキスト
- * @param {{role:'user'|'model', text:string}[]} history - 会話履歴
+ * @param {{role:'user'|'model', text:string, images?:{mimeType:string,data:string}[]}[]} history - 会話履歴
  * @returns {Promise<string>} モデルの応答テキスト
  */
 export async function askGemini(relayUrl, systemInstruction, history) {
   if (!relayUrl) throw new Error('Geminiリレー(GAS)のURLが未設定です。設定タブで登録してください。');
   const body = {
     system_instruction: { parts: [{ text: systemInstruction }] },
-    contents: history.map((m) => ({ role: m.role, parts: [{ text: m.text }] })),
-    generationConfig: { temperature: 0.5, topP: 0.95, maxOutputTokens: 2048 },
+    // 画像付きメッセージは inlineData を先頭に、続けてテキスト。gemini-2.5-flash はマルチモーダル対応。
+    // 画像のみ（テキスト無し）のときは空テキストを付けない。
+    contents: history.map((m) => {
+      const parts = [];
+      for (const im of (m.images || [])) parts.push({ inlineData: { mimeType: im.mimeType, data: im.data } });
+      if (m.text) parts.push({ text: m.text });
+      else if (!parts.length) parts.push({ text: '' });
+      return { role: m.role, parts };
+    }),
+    generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
   };
   const res = await fetch(relayUrl, {
     method: 'POST',
@@ -35,7 +43,7 @@ export async function askGemini(relayUrl, systemInstruction, history) {
 }
 
 /**
- * RAG検索用: クエリ文を専用中継(gemini-relay.gs)経由で text-embedding-004 でベクトル化する。
+ * RAG検索用: クエリ文を専用中継(gemini-relay.gs)経由で gemini-embedding-001 / 768次元 でベクトル化する。
  * ※ 既定の共用中継(wood-decay-fungi)は embed 非対応。設定で専用中継URLに差し替えて使う。
  * @param {string} relayUrl - Geminiリレー(GAS)のURL
  * @param {string} text - 埋め込む文

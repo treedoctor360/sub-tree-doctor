@@ -221,3 +221,29 @@ table.fungi th { background: var(--surface-2); color: var(--muted); font-size: .
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg);
   padding: 10px 18px; border-radius: 999px; font-size: .86rem; z-index: 30; box-shadow: var(--shadow); }
 .app-foot { padding: 16px 18px 28px; border-top: 1px solid var(--line); color: var(--faint); font-size: .78rem; }
+
+/* === サブ樹木医チャット拡張（出典表示 / t/R / 写真） === */
+
+/* B: チャット回答の出典表示（検索でヒットした2冊の該当箇所） */
+.msg .refs { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 2px 8px; padding-left: 4px; }
+.msg .refs-title { font-size: 11px; font-weight: 600; color: #6b7280; }
+.msg .ref { font-size: 11px; color: #6b7280; }
+
+/* ③ composerのツール行（写真・t/R トグル）と t/R 入力 */
+.composer-tools { display: flex; gap: 6px; margin-bottom: 6px; }
+.chip { font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface-2, #f3f4f6); color: var(--muted, #4b5563); cursor: pointer; }
+.chip:disabled { opacity: .5; cursor: default; }
+.chip.on { background: #e0f2f1; color: #0f766e; border-color: #99f6e4; }
+.tr-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+.tr-row label { font-size: 12px; display: flex; align-items: center; gap: 4px; }
+.tr-row input[type="number"] { width: 64px; }
+
+/* ② 添付画像プレビュー（composer）と 送信済みメッセージ内の画像 */
+.img-previews { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.img-previews .thumb { position: relative; }
+.img-previews .thumb img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.img-previews .thumb button { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%;
+  border: none; background: #111827; color: #fff; font-size: 12px; line-height: 1; cursor: pointer; }
+.msg .bubble-imgs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.msg .bubble-imgs img { max-width: 180px; max-height: 180px; border-radius: 10px; border: 1px solid var(--line); }
