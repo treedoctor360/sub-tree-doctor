@@ -123,14 +123,16 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
             ) : null}
             {m.text ? <div className="bubble">{m.text}</div> : null}
             {m.refs && m.refs.length ? (
-              <div className="refs">
-                <span className="refs-title">出典</span>
-                {m.refs.map((r) => (
-                  <span key={r.n} className="ref">
-                    【{r.n}】{r.book}{r.pageBatch ? ` p.${r.pageBatch}` : ''}{r.section ? ` 〔${r.section}〕` : ''}
-                  </span>
-                ))}
-              </div>
+              <details className="refs">
+                <summary className="refs-title">{m.refs.length}件</summary>
+                <div className="refs-list">
+                  {m.refs.map((r) => (
+                    <span key={r.n} className="ref">
+                      【{r.n}】{r.book}{r.pageBatch ? ` p.${r.pageBatch}` : ''}{r.section ? ` 〔${r.section}〕` : ''}
+                    </span>
+                  ))}
+                </div>
+              </details>
             ) : null}
           </div>
         ))}

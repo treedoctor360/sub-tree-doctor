@@ -20,7 +20,9 @@ export async function askGemini(relayUrl, systemInstruction, history) {
       else if (!parts.length) parts.push({ text: '' });
       return { role: m.role, parts };
     }),
-    generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
+    // maxOutputTokens: gemini-2.5-flash は既定で内部「思考」にも出力トークンを使う。
+    // 2048 では長めの回答が finishReason=MAX_TOKENS で途中で切れるため、思考＋本文に余裕を持たせる。
+    generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 8192 },
   };
   const res = await fetch(relayUrl, {
     method: 'POST',
@@ -35,9 +37,13 @@ export async function askGemini(relayUrl, systemInstruction, history) {
     throw new Error('Gemini中継エラー: ' + detail);
   }
   const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') ?? '';
+  const finish = data?.candidates?.[0]?.finishReason;
   if (!text) {
-    const fb = data?.candidates?.[0]?.finishReason;
-    throw new Error('応答が空でした' + (fb ? `（finishReason: ${fb}）` : '') + '。入力を短くして再試行してください。');
+    throw new Error('応答が空でした' + (finish ? `（finishReason: ${finish}）` : '') + '。入力を短くして再試行してください。');
+  }
+  // トークン上限で途中終了したときは、切れたことが分かるよう一言添える（本文は保持）。
+  if (finish === 'MAX_TOKENS') {
+    return text + '\n\n…（回答が長く、途中で止まりました。「続けて」と送ると続きを出します）';
   }
   return text;
 }
