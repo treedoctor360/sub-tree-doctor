@@ -49,6 +49,8 @@ function doPost(e){
     if(!key) return json({ error: 'GEMINI_API_KEY 未設定（スクリプトプロパティ）' });
     const body = JSON.parse(e.postData.contents);
     if(!checkToken(body && body.token)) return json({ error: '認証エラー' });
+    // 認証用フィールドを除去してから転送する（Gemini APIは未知フィールド token を拒否する）。
+    delete body.token;
     return (body && body.embed === true) ? embed(body, key) : generate(body, key);
   }catch(err){ return json({ error: String(err) }); }
 }
