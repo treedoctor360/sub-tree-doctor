@@ -6,6 +6,7 @@ const KEY = 'subtreedoc.config.v1';
 // 既定の Geminiリレーは wood-decay-fungi の透過中継を流用（設定で変更可）。
 const DEFAULTS = {
   geminiRelayUrl: 'https://script.google.com/macros/s/AKfycbwfSHmBl8VYy635RPq0hnc_q_wJw1Cgrg0NzXDcucBmK0jTVOvDKbMxeYqvr-UtCyJ9fQ/exec',
+  geminiRelayToken: '', // gas/gemini-relay.gs のスクリプトプロパティ TOKEN と一致させる
   gasDbUrl: '',
   gasToken: '',
   inspector: '',

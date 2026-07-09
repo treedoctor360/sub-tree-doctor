@@ -66,7 +66,7 @@ export async function buildSystemInstruction(record, config, query) {
   const searchQuery = buildRetrievalQuery(record, query); // ① カルテ構造値で拡張
   if (config?.kbEmbeddingsUrl && searchQuery) {
     try {
-      const chunks = await retrieve(config.geminiRelayUrl, config.kbEmbeddingsUrl, searchQuery, 6);
+      const chunks = await retrieve(config.geminiRelayUrl, config.kbEmbeddingsUrl, searchQuery, 6, config.geminiRelayToken);
       if (chunks && chunks.length) {
         knowledge = formatChunks(chunks);
         note = '（相談内容に関連する箇所を樹木医必携の2冊から検索して抜粋。使った箇所は末尾で【n】として出典を添えること）\n';

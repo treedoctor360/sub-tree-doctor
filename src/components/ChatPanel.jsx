@@ -76,7 +76,7 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
       // 検索クエリはユーザーが「診たい内容」(text)を主に、カルテ構造値で拡張(systemPrompt側)。
       // text が空（画像のみ等）でもカルテ文脈で検索できるよう text を渡す。
       const { instruction, refs } = await buildSystemInstruction(record, config, text);
-      const reply = await askGemini(config.geminiRelayUrl, instruction, next);
+      const reply = await askGemini(config.geminiRelayUrl, instruction, next, config.geminiRelayToken);
       setMessages([...next, { role: 'model', text: reply, refs }]);
     } catch (e) {
       setError(e.message);
@@ -96,7 +96,7 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
       const query = [record.findings, ...messages.filter((m) => m.role === 'user').map((m) => m.text)]
         .filter(Boolean).join(' ').slice(0, 1000);
       const { instruction } = await buildSystemInstruction(record, config, query);
-      const reply = await askGemini(config.geminiRelayUrl, instruction, hist);
+      const reply = await askGemini(config.geminiRelayUrl, instruction, hist, config.geminiRelayToken);
       onReport(parseReportJson(reply));
     } catch (e) {
       setError('レポート生成に失敗: ' + e.message);

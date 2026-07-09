@@ -12,6 +12,11 @@ export default function SettingsPanel({ config, update }) {
         <span className="hint">既定は wood-decay-fungi の透過中継を流用。RAG(知識ベース検索)を使うには gas/gemini-relay.gs をデプロイし、そのURL（embed対応の専用中継）に変更。</span>
       </label>
       <label className="field">
+        <span>Geminiリレー トークン</span>
+        <input value={config.geminiRelayToken} onChange={(e) => update({ geminiRelayToken: e.target.value })} placeholder="GASのスクリプトプロパティ TOKEN と一致させる" />
+        <span className="hint">gas/gemini-relay.gs は合言葉トークンが一致しないと応答しません。友達に共有する場合は、このトークンとURLをセットで（非公開の手段で）渡してください。</span>
+      </label>
+      <label className="field">
         <span>知識ベースURL（埋め込みJSON・任意）</span>
         <input value={config.kbEmbeddingsUrl} onChange={(e) => update({ kbEmbeddingsUrl: e.target.value })} placeholder="未設定なら内蔵の要約KBで動作します" />
         <span className="hint">knowledgeEmbeddings.json(int8量子化・約5MB)の配信URL。書籍本文を含むため非公開に置くこと。Drive直リンクはCORSで読めないため、gas/gemini-relay.gs を配信元にし、上のGeminiリレーURLと同じ /exec URL を入れるのが簡単（GETで配信）。初回のみ取得し端末内(IndexedDB)にキャッシュ。</span>

@@ -49,14 +49,16 @@ function decodeVec(raw) {
 }
 
 // コーパスをロード（メモリ→IndexedDB→ネットワークの順）。URLが変われば取り直す。
-async function loadCorpus(url) {
+// キャッシュキーはtoken無しのurlで揃える（GETはクエリ文字列で認証するため、tokenは取得時にだけ付与）。
+async function loadCorpus(url, token) {
   if (memCache && memCache.url === url) return memCache;
   try {
     const cached = await idbGet(url);
     if (cached && Array.isArray(cached.chunks) && cached.chunks.length) { memCache = cached; return cached; }
   } catch { /* IndexedDB不可なら素通り */ }
 
-  const res = await fetch(url);
+  const fetchUrl = token ? `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}` : url;
+  const res = await fetch(fetchUrl);
   if (!res.ok) throw new Error(`知識ベースの取得に失敗（${res.status}）`);
   const data = await res.json();
   // ベクトルを復元してからキャッシュ（TypedArrayはIndexedDBにそのまま保存できる）。
@@ -79,11 +81,11 @@ function cosine(a, b) {
  * 相談文に関連する知識チャンクを取得。
  * @returns {Promise<Array|null>} top-kのチャンク配列。コーパス未設定/未ロード時は null。
  */
-export async function retrieve(relayUrl, corpusUrl, query, k = 6) {
+export async function retrieve(relayUrl, corpusUrl, query, k = 6, token) {
   if (!corpusUrl || !query || !query.trim()) return null;
-  const corpus = await loadCorpus(corpusUrl);
+  const corpus = await loadCorpus(corpusUrl, token);
   if (!corpus || !corpus.chunks.length) return null;
-  const qv = await embedText(relayUrl, query.trim());
+  const qv = await embedText(relayUrl, query.trim(), token);
   return corpus.chunks
     .map((c) => ({ c, score: cosine(qv, c.vector) }))
     .sort((a, b) => b.score - a.score)

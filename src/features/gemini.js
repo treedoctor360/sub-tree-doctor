@@ -5,11 +5,13 @@
  * @param {string} relayUrl - Geminiリレー(GAS)のURL
  * @param {string} systemInstruction - system_instruction のテキスト
  * @param {{role:'user'|'model', text:string, images?:{mimeType:string,data:string}[]}[]} history - 会話履歴
+ * @param {string} [token] - リレーのスクリプトプロパティ TOKEN と一致させる合言葉
  * @returns {Promise<string>} モデルの応答テキスト
  */
-export async function askGemini(relayUrl, systemInstruction, history) {
+export async function askGemini(relayUrl, systemInstruction, history, token) {
   if (!relayUrl) throw new Error('Geminiリレー(GAS)のURLが未設定です。設定タブで登録してください。');
   const body = {
+    token,
     system_instruction: { parts: [{ text: systemInstruction }] },
     // 画像付きメッセージは inlineData を先頭に、続けてテキスト。gemini-2.5-flash はマルチモーダル対応。
     // 画像のみ（テキスト無し）のときは空テキストを付けない。
@@ -53,14 +55,15 @@ export async function askGemini(relayUrl, systemInstruction, history) {
  * ※ 既定の共用中継(wood-decay-fungi)は embed 非対応。設定で専用中継URLに差し替えて使う。
  * @param {string} relayUrl - Geminiリレー(GAS)のURL
  * @param {string} text - 埋め込む文
+ * @param {string} [token] - リレーのスクリプトプロパティ TOKEN と一致させる合言葉
  * @returns {Promise<number[]>} 埋め込みベクトル
  */
-export async function embedText(relayUrl, text) {
+export async function embedText(relayUrl, text, token) {
   if (!relayUrl) throw new Error('Geminiリレー(GAS)のURLが未設定です。');
   const res = await fetch(relayUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ embed: true, text }),
+    body: JSON.stringify({ embed: true, text, token }),
   });
   const raw = await res.text();
   let data;
