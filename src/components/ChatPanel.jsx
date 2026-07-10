@@ -76,9 +76,9 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
     try {
       // 検索クエリはユーザーが「診たい内容」(text)を主に、カルテ構造値で拡張(systemPrompt側)。
       // text が空（画像のみ等）でもカルテ文脈で検索できるよう text を渡す。
-      const { instruction, refs } = await buildSystemInstruction(record, config, text);
+      const { instruction, refs, mode } = await buildSystemInstruction(record, config, text);
       const reply = await askGemini(config.geminiRelayUrl, instruction, next, config.geminiRelayToken);
-      setMessages([...next, { role: 'model', text: reply, refs }]);
+      setMessages([...next, { role: 'model', text: reply, refs, mode }]);
     } catch (e) {
       setError(e.message);
       setMessages(next); // 保持
@@ -123,6 +123,11 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
               </div>
             ) : null}
             {m.text ? <div className="bubble">{m.text}</div> : null}
+            {m.mode ? (
+              <span className={`mode-tag ${m.mode}`}>
+                {m.mode === 'rag' ? '📚 知識ベース（2冊検索）' : '要約KB（内蔵）'}
+              </span>
+            ) : null}
             {m.refs && m.refs.length ? (
               <details className="refs">
                 <summary className="refs-title">{m.refs.length}件</summary>

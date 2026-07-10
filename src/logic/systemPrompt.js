@@ -63,6 +63,7 @@ export async function buildSystemInstruction(record, config, query) {
   let knowledge = KNOWLEDGE_BASE;
   let note = '';
   let refs = []; // 検索でヒットした出典（UI表示用）。フォールバック時は空。
+  let mode = 'static'; // 'rag'=2冊検索を注入 / 'static'=内蔵の要約KBにフォールバック
   const searchQuery = buildRetrievalQuery(record, query); // ① カルテ構造値で拡張
   if (config?.kbEmbeddingsUrl && searchQuery) {
     try {
@@ -73,6 +74,7 @@ export async function buildSystemInstruction(record, config, query) {
         refs = chunks.map((c, i) => ({
           n: i + 1, book: c.book || '', pageBatch: c.pageBatch || '', section: c.section || '',
         }));
+        mode = 'rag';
       }
     } catch { /* 検索失敗時は静的KBへフォールバック */ }
   }
@@ -83,7 +85,7 @@ export async function buildSystemInstruction(record, config, query) {
     '\n\n--- 現在のカルテ ---\n' +
     summarizeKarte(record)
   );
-  return { instruction, refs };
+  return { instruction, refs, mode };
 }
 
 // 診断記録レポートの生成を促す最終指示（JSONで返させる）。

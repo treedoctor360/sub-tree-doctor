@@ -251,6 +251,15 @@ table.fungi th { background: var(--surface-2); color: var(--muted); font-size: .
 .msg .refs-list { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
 .msg .ref { font-size: 11px; color: var(--muted); }
 
+/* 回答が「知識ベース(RAG)」か「要約KB(内蔵)」かを示すバッジ */
+.msg .mode-tag { font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 999px; align-self: flex-start; }
+.msg .mode-tag.rag { background: var(--accent-soft); color: var(--accent-ink); }
+.msg .mode-tag.static { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+
+/* 設定の接続確認の結果表示 */
+.test-ok { font-size: .82rem; color: var(--ok); margin-top: 6px; word-break: break-word; }
+.test-ng { font-size: .82rem; color: var(--danger); margin-top: 6px; word-break: break-word; }
+
 /* ③ composerのツール行（写真・t/R トグル）と t/R 入力 */
 .composer-tools { display: flex; gap: 6px; margin-bottom: 6px; }
 .chip { font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px;
