@@ -26,14 +26,20 @@ export async function askGemini(relayUrl, systemInstruction, history, token) {
     // 2048 では長めの回答が finishReason=MAX_TOKENS で途中で切れるため、思考＋本文に余裕を持たせる。
     generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 8192 },
   };
-  const res = await fetch(relayUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(body),
-  });
+  let res;
+  try {
+    res = await fetch(relayUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    // fetch自体が失敗（iOS Safariでは "Load failed"）。中継に到達できていない。
+    throw new Error('リレーに接続できませんでした（' + e.message + '）。設定の「Geminiリレー URL」が /exec で正しいか、GASのデプロイの「アクセスできるユーザー」が「全員」になっているか確認してください。');
+  }
   const raw = await res.text();
   let data;
-  try { data = JSON.parse(raw); } catch { throw new Error('リレー応答の解析に失敗: ' + raw.slice(0, 200)); }
+  try { data = JSON.parse(raw); } catch { throw new Error('リレー応答の解析に失敗（HTMLが返っている可能性＝GASの公開設定やURLを確認）: ' + raw.slice(0, 200)); }
   if (data.error) {
     const detail = typeof data.error === 'string' ? data.error : (data.detail || JSON.stringify(data.error));
     throw new Error('Gemini中継エラー: ' + detail);
