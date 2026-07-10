@@ -25,7 +25,10 @@ NotebookLM「樹木医必携」の2冊（**樹木医の手引き 第4版** ／ *
 2. 開発：`npm run dev` ／ ビルド：`npm run build`
 3. **記録GAS**（任意・共有する場合）：`gas/diagnosis-db-relay.gs` を GAS にデプロイし、
    スクリプトプロパティ（SHEET_ID / TOKEN / SHEET_NAME）を設定。発行URLとトークンをアプリの「設定」に登録。
-4. **Geminiリレー**：既定で wood-decay-fungi の透過中継を流用（設定で変更可）。
+4. **Geminiリレー**（各自で用意）：利用者ごとに `gas/gemini-relay.gs` を自分の GAS プロジェクトにデプロイし、
+   スクリプトプロパティ（GEMINI_API_KEY / TOKEN、RAGを使うなら CORPUS_FILE_ID）を設定。ウェブアプリとして
+   「全員」に公開し、その `/exec` URL と TOKEN をアプリの「設定」に登録する（費用は各自の Google アカウントに課金）。
+   公開ビルドには特定の GAS URL を埋め込まない（既定は空）。
 5. **公開**：main へ push すると GitHub Actions が `dist` を Pages へデプロイ
    （Settings → Pages → Source を「GitHub Actions」にしておく）。
 

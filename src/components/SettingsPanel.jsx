@@ -46,14 +46,20 @@ export default function SettingsPanel({ config, update }) {
   return (
     <div className="settings">
       <p className="lead">AIの中継と記録の保存先を設定します。値はこの端末（localStorage）に保存され、外部には送られません。</p>
+      <div className="warn-banner">
+        本アプリはご自分の Gemini 中継を使う前提です。各自で <b>gas/gemini-relay.gs</b> をデプロイし、
+        自分の <b>APIキー</b>・<b>TOKEN</b> をGASのスクリプトプロパティに設定のうえ、発行された
+        <b>/exec URL</b> と <b>TOKEN</b> を下に入力してください（費用は各自のGoogleアカウントに課金されます）。
+      </div>
       <label className="field">
         <span>担当樹木医名</span>
         <input value={config.inspector} onChange={(e) => update({ inspector: e.target.value })} placeholder="記録の contributor に入ります" />
       </label>
       <label className="field">
         <span>Geminiリレー URL（GAS）</span>
-        <input value={config.geminiRelayUrl} onChange={(e) => update({ geminiRelayUrl: e.target.value })} />
-        <span className="hint">既定は wood-decay-fungi の透過中継を流用。RAG(知識ベース検索)を使うには gas/gemini-relay.gs をデプロイし、そのURL（embed対応の専用中継）に変更。</span>
+        <input value={config.geminiRelayUrl} onChange={(e) => update({ geminiRelayUrl: e.target.value })}
+          placeholder="自分でデプロイした gas/gemini-relay.gs の /exec URL" />
+        <span className="hint">自分のGASプロジェクトに gas/gemini-relay.gs を貼り、GEMINI_API_KEY・TOKEN（任意でCORPUS_FILE_ID）をスクリプトプロパティに設定→ウェブアプリとして「全員」に公開デプロイ→その /exec URL をここに入れる。対話・RAG検索の両方に使う。</span>
       </label>
       <label className="field">
         <span>Geminiリレー トークン</span>

@@ -3,9 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 
 const KEY = 'subtreedoc.config.v1';
 
-// 既定の Geminiリレーは wood-decay-fungi の透過中継を流用（設定で変更可）。
+// 中継URL・キー・トークンは端末ごとに各自が設定する（公開ビルドに特定のGAS URLを埋め込まない）。
+// 既定を空にすることで、利用者は自分でデプロイした gas/gemini-relay.gs のURLを設定タブに入れて使う。
 const DEFAULTS = {
-  geminiRelayUrl: 'https://script.google.com/macros/s/AKfycbwfSHmBl8VYy635RPq0hnc_q_wJw1Cgrg0NzXDcucBmK0jTVOvDKbMxeYqvr-UtCyJ9fQ/exec',
+  geminiRelayUrl: '',
   geminiRelayToken: '', // gas/gemini-relay.gs のスクリプトプロパティ TOKEN と一致させる
   gasDbUrl: '',
   gasToken: '',
