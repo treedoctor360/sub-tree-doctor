@@ -5,6 +5,31 @@ import { TEBIKI_GROUPS } from '../data/tebikiItems.js';
 import { evaluateRecord } from '../logic/diagnosis.js';
 import { PRECISION_TRIGGER_IDS } from '../data/healthItems.js';
 
+// v27風のボタン選択（0〜4 / A〜D）。数字を大きく、説明を下に。選択中を再クリックで解除。
+function ScaleItem({ group, label, precision, options, value, onSelect }) {
+  return (
+    <div className="scale-item">
+      <div className="scale-head">
+        {group ? <span className="scale-group">{group}</span> : null}
+        <span className="scale-label">{label}{precision ? <em className="prec">精</em> : null}</span>
+      </div>
+      <div className="scale-btns" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
+        {options.map((o) => {
+          const on = value != null && value !== '' && String(value) === String(o.value);
+          return (
+            <button type="button" key={o.value}
+              className={`scale-btn ${on ? 'on' : ''}`}
+              onClick={() => onSelect(on ? '' : o.value)}>
+              <span className="scale-num">{o.value}</span>
+              <span className="scale-desc">{o.desc}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function OverallBadge({ record }) {
   const { avg, worst, overall } = evaluateRecord(record, DECLINE_ITEM_IDS);
   if (!overall) return <div className="muted small">健全度・活力度が未入力です。</div>;
@@ -78,30 +103,22 @@ export default function KartePanel({ record, onChange }) {
 
       <details className="block">
         <summary>健全度（外観診断・14項目 / A〜D）</summary>
-        <div className="items">
+        <div className="scale-list">
           {HEALTH_ITEMS.map((it) => (
-            <label key={it.id} className="item">
-              <span className="item-label">{it.label}{it.precision ? <em className="prec">精</em> : null}</span>
-              <select value={record.health?.[it.id] || ''} onChange={(e) => setHealth(it.id, e.target.value)}>
-                <option value="">—</option>
-                {it.grades.map((g) => <option key={g.value} value={g.value}>{g.value}: {g.label}</option>)}
-              </select>
-            </label>
+            <ScaleItem key={it.id} group={it.group} label={it.label} precision={it.precision}
+              options={it.grades.map((g) => ({ value: g.value, desc: g.label }))}
+              value={record.health?.[it.id]} onSelect={(v) => setHealth(it.id, v)} />
           ))}
         </div>
       </details>
 
       <details className="block">
         <summary>活力度（衰退度・17項目 / 0〜4）</summary>
-        <div className="items">
+        <div className="scale-list">
           {DECLINE_ITEMS.map((it) => (
-            <label key={it.id} className="item">
-              <span className="item-label">{it.label}</span>
-              <select value={record.scores?.[it.id] ?? ''} onChange={(e) => setScore(it.id, e.target.value)}>
-                <option value="">—</option>
-                {it.desc.map((d, i) => <option key={i} value={i}>{i}: {d}</option>)}
-              </select>
-            </label>
+            <ScaleItem key={it.id} group={it.group} label={it.label}
+              options={it.desc.map((d, i) => ({ value: i, desc: d }))}
+              value={record.scores?.[it.id]} onSelect={(v) => setScore(it.id, v)} />
           ))}
         </div>
       </details>

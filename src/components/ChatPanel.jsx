@@ -28,7 +28,8 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
   const [trR, setTrR] = useState('');
   const [trOpen, setTrOpen] = useState(false); // 開口空洞（チェック時のみ文言を付ける）
   const scroller = useRef(null);
-  const fileRef = useRef(null);
+  const fileRef = useRef(null);   // 📷 撮影（capture=environment）
+  const albumRef = useRef(null);  // 🖼 アルバム（capture無し）
 
   useEffect(() => {
     if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight;
@@ -142,9 +143,12 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
 
       <div className="composer">
         <div className="composer-tools">
-          <button type="button" className="chip" onClick={() => fileRef.current?.click()} disabled={busy}>📷 写真</button>
+          <button type="button" className="chip" onClick={() => fileRef.current?.click()} disabled={busy}>📷 撮影</button>
+          <button type="button" className="chip" onClick={() => albumRef.current?.click()} disabled={busy}>🖼 アルバム</button>
           <button type="button" className={`chip ${showTr ? 'on' : ''}`} onClick={() => setShowTr((v) => !v)}>t/R</button>
+          {/* 撮影は capture=environment でカメラ、アルバムは capture 無しで写真ライブラリ/ファイルから選択 */}
           <input ref={fileRef} type="file" accept="image/*" capture="environment" multiple hidden onChange={onPickImages} />
+          <input ref={albumRef} type="file" accept="image/*" multiple hidden onChange={onPickImages} />
         </div>
 
         {showTr ? (

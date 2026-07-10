@@ -96,6 +96,22 @@ textarea { resize: vertical; }
 .item { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: .84rem; }
 .item-label { color: var(--ink); }
 .item select { width: auto; min-width: 90px; }
+/* v27風のボタン選択（活力度・健全度）。数字を大きく、説明を下に。 */
+.scale-list { display: flex; flex-direction: column; gap: 8px; }
+.scale-item { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--surface-2); }
+.scale-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.scale-group { font-size: .66rem; font-weight: 700; color: var(--muted); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+.scale-label { font-weight: 600; font-size: .92rem; }
+.scale-btns { display: grid; gap: 6px; }
+.scale-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; width: auto;
+  border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 3px; min-height: 58px;
+  background: var(--surface); color: var(--ink); cursor: pointer; font-family: inherit; }
+.scale-btn:hover:not(.on) { border-color: var(--accent); }
+.scale-btn.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.scale-num { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.scale-desc { font-size: .64rem; line-height: 1.25; color: var(--muted); text-align: center; word-break: break-word; }
+.scale-btn.on .scale-desc { color: var(--accent-ink); }
 .import-area { font-family: var(--font-num); font-size: .78rem; }
 .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .row.between { justify-content: space-between; }

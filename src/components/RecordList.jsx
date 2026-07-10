@@ -1,9 +1,24 @@
+// 全記録をJSONファイルとして端末にダウンロード保存する（バックアップ用・GAS不要）。
+function exportRecords(records) {
+  const payload = { app: 'sub-tree-doctor', exportedAt: new Date().toISOString(), count: records.length, records };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `subtreedoc-records-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export default function RecordList({ records, onDelete, onSync, onPull, syncing, gasReady }) {
   return (
     <div className="record-list">
       <div className="row between">
         <p className="lead" style={{ margin: 0 }}>保存した相談記録（{records.length}件）</p>
         <div className="row">
+          <button className="btn" onClick={() => exportRecords(records)} disabled={records.length === 0} title="全記録をJSONファイルとして端末に保存">💾 ファイル保存</button>
           <button className="btn" onClick={onPull} disabled={!gasReady || syncing} title="共有スプレッドシートから取り込み">⬇️ 読込</button>
           <button className="btn" onClick={onSync} disabled={!gasReady || syncing || records.length === 0} title="共有スプレッドシートへ同期">☁️ 共有</button>
         </div>
