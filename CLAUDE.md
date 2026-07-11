@@ -48,6 +48,7 @@ RAG検索し、gemini-2.5-flash で対話する。このファイルは「常に
 - `npm run dev` / `npm run build` / `npm run preview`
 - `GEMINI_API_KEY=xxx npm run build-embeddings`（コーパス生成。ローカルから直接 Gemini を叩く別系統。
   費用は課金キーに発生。生成後は Drive アップロード → `CORPUS_FILE_ID` 設定 → GAS再デプロイが手作業で必要）。
+  **再生成前に `docs/corpus-corrections.md` の未反映OCR訂正をOCRマスターへ取り込むこと。**
 
 ## コミット規約
 
