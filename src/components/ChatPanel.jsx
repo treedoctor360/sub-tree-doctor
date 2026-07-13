@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { askGemini, parseReportJson } from '../features/gemini.js';
 import { buildSystemInstruction, REPORT_INSTRUCTION } from '../logic/systemPrompt.js';
 import { classifyTr } from '../logic/diagnosis.js';
+import { FLOW_STAGES } from '../data/diagnosisFlow.js';
 
 const GREETING = 'サブ樹木医です。いま診ている木で、いちばん気になっている点を聞かせてください。カルテに総合判定や所見を入れておくと、それを踏まえて一緒に考えます。';
 const MAX_IMAGES = 3;
@@ -27,6 +28,8 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
   const [trT, setTrT] = useState('');          // ③ 初期値は空（既定値を勝手に送らない）
   const [trR, setTrR] = useState('');
   const [trOpen, setTrOpen] = useState(false); // 開口空洞（チェック時のみ文言を付ける）
+  const [guided, setGuided] = useState(false); // 案1 ガイド診断モード
+  const [stageIdx, setStageIdx] = useState(0); // 現在の診断段
   const scroller = useRef(null);
   const fileRef = useRef(null);   // 📷 撮影（capture=environment）
   const albumRef = useRef(null);  // 🖼 アルバム（capture無し）
@@ -37,6 +40,8 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
 
   // ③ t/R: t・R 両方が入力され、classifyTr が有効値を返すときだけ判定を得る。
   const trResult = (trT !== '' && trR !== '') ? classifyTr(trT, trR, trOpen) : null;
+  // 案1: ガイド診断ONのとき現在の段。送信時に buildSystemInstruction へ渡してその段に集中させる。
+  const stage = guided ? FLOW_STAGES[stageIdx] : null;
 
   const onPickImages = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -54,11 +59,13 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
   };
   const removeImage = (idx) => setImages((prev) => prev.filter((_, i) => i !== idx));
 
-  const send = async () => {
-    const text = input.trim();
-    const hasImages = images.length > 0;
+  // preset(文字列)が渡されたとき（ガイドの「この段を進める」等）は入力欄でなくその文を送る。
+  const send = async (preset) => {
+    const usePreset = typeof preset === 'string';
+    const text = usePreset ? preset.trim() : input.trim();
+    const hasImages = !usePreset && images.length > 0;
     // ③ 有効な t/R だけ「検算済みの事実」として1行付ける（未入力・無効なら何も送らない）
-    const trLine = trResult
+    const trLine = (!usePreset && trResult)
       ? `【現地計測】t/R = ${trResult.ratio.toFixed(2)}（${trResult.text}）` + (trOpen ? '／開口空洞あり' : '')
       : '';
     if ((!text && !trLine && !hasImages) || busy) return;
@@ -71,12 +78,12 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
     };
     const next = [...messages, userMsg];
     setMessages(next);
-    setInput(''); setImages([]); setTrT(''); setTrR(''); setTrOpen(false);
+    if (!usePreset) { setInput(''); setImages([]); setTrT(''); setTrR(''); setTrOpen(false); }
     setBusy(true);
     try {
       // 検索クエリはユーザーが「診たい内容」(text)を主に、カルテ構造値で拡張(systemPrompt側)。
-      // text が空（画像のみ等）でもカルテ文脈で検索できるよう text を渡す。
-      const { instruction, refs, mode } = await buildSystemInstruction(record, config, text);
+      // text が空（画像のみ等）でもカルテ文脈で検索できるよう text を渡す。ガイドONなら段(stage)を渡す。
+      const { instruction, refs, mode } = await buildSystemInstruction(record, config, text, stage);
       const reply = await askGemini(config.geminiRelayUrl, instruction, next, config.geminiRelayToken);
       setMessages([...next, { role: 'model', text: reply, refs, mode }]);
     } catch (e) {
@@ -148,6 +155,8 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
 
       <div className="composer">
         <div className="composer-tools">
+          <button type="button" className={`chip ${guided ? 'on' : ''}`} onClick={() => setGuided((v) => !v)}
+            title="手引きの診断順に沿って段階的に進める">🧭 ガイド</button>
           <button type="button" className="chip" onClick={() => fileRef.current?.click()} disabled={busy}>📷 撮影</button>
           <button type="button" className="chip" onClick={() => albumRef.current?.click()} disabled={busy}>🖼 アルバム</button>
           <button type="button" className={`chip ${showTr ? 'on' : ''}`} onClick={() => setShowTr((v) => !v)}>t/R</button>
@@ -155,6 +164,27 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
           <input ref={fileRef} type="file" accept="image/*" capture="environment" multiple hidden onChange={onPickImages} />
           <input ref={albumRef} type="file" accept="image/*" multiple hidden onChange={onPickImages} />
         </div>
+
+        {guided ? (
+          <div className="flow-bar">
+            <div className="flow-steps">
+              {FLOW_STAGES.map((s, i) => (
+                <button key={s.id} type="button"
+                  className={`flow-step ${i === stageIdx ? 'on' : ''} ${i < stageIdx ? 'done' : ''}`}
+                  onClick={() => setStageIdx(i)} title={s.goal}>{s.label}</button>
+              ))}
+            </div>
+            <div className="flow-hint">{stage?.hint}</div>
+            <div className="flow-nav">
+              <button type="button" className="btn small" disabled={stageIdx === 0 || busy}
+                onClick={() => setStageIdx((i) => Math.max(0, i - 1))}>◀ 前</button>
+              <button type="button" className="btn small primary" disabled={busy}
+                onClick={() => send(`「${stage.label}」の段を進めてください。`)}>この段を進める</button>
+              <button type="button" className="btn small" disabled={stageIdx === FLOW_STAGES.length - 1 || busy}
+                onClick={() => setStageIdx((i) => Math.min(FLOW_STAGES.length - 1, i + 1))}>次 ▶</button>
+            </div>
+          </div>
+        ) : null}
 
         {showTr ? (
           <div className="tr-row">
@@ -179,7 +209,7 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
         <textarea rows={2} value={input} placeholder="症状や気になる点を入力（Ctrl+Enterで送信）"
           onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} disabled={busy} />
         <div className="composer-btns">
-          <button className="btn primary" onClick={send} disabled={!canSend}>送信</button>
+          <button className="btn primary" onClick={() => send()} disabled={!canSend}>送信</button>
           <button className="btn" onClick={makeReport} disabled={busy || messages.length === 0}
             title="対話とカルテから診断記録を生成">この診断を記録</button>
         </div>

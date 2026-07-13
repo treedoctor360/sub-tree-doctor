@@ -72,7 +72,7 @@ function formatChunks(chunks) {
  * 関連箇所だけを注入するRAGモードで動く。未設定・取得失敗時は静的KB(KNOWLEDGE_BASE)にフォールバック。
  * @returns {{instruction:string, refs:Array}} instruction=system_instruction本文 / refs=検索でヒットした出典(UI表示用)
  */
-export async function buildSystemInstruction(record, config, query) {
+export async function buildSystemInstruction(record, config, query, stage) {
   let knowledge = KNOWLEDGE_BASE;
   let note = '';
   let refs = []; // 検索でヒットした出典（UI表示用）。フォールバック時は空。
@@ -92,12 +92,19 @@ export async function buildSystemInstruction(record, config, query) {
       }
     } catch { /* 検索失敗時は静的KBへフォールバック */ }
   }
+  // 案1 ガイド診断: stage が渡されたら、その段に集中させる指示を足す（結論への先走りを防ぐ）。
+  const stageBlock = stage
+    ? '\n\n--- ガイド診断（現在の段階） ---\n' +
+      `いまは「${stage.label}」の段。目的: ${stage.goal}\n${stage.ask}\n` +
+      'この段に集中し、後の段の結論へ先走らない。前段までに分かったことは踏まえてよい。'
+    : '';
   const instruction = (
     PERSONA +
     '\n\n--- 知識ベース ---\n' + note +
     knowledge +
     '\n\n--- 現在のカルテ ---\n' +
-    summarizeKarte(record)
+    summarizeKarte(record) +
+    stageBlock
   );
   return { instruction, refs, mode };
 }

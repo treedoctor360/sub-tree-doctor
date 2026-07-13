@@ -260,6 +260,18 @@ table.fungi th { background: var(--surface-2); color: var(--muted); font-size: .
 .test-ok { font-size: .82rem; color: var(--ok); margin-top: 6px; word-break: break-word; }
 .test-ng { font-size: .82rem; color: var(--danger); margin-top: 6px; word-break: break-word; }
 
+/* 案1 ガイド診断ステッパー */
+.flow-bar { border: 1px solid var(--line); border-radius: 10px; padding: 8px; margin-bottom: 6px;
+  background: var(--surface-2); display: flex; flex-direction: column; gap: 6px; }
+.flow-steps { display: flex; gap: 4px; overflow-x: auto; }
+.flow-step { flex: 0 0 auto; width: auto; font-size: 11px; padding: 4px 8px; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.flow-step.done { color: var(--accent-ink); border-color: var(--accent-soft); }
+.flow-step.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+@media (prefers-color-scheme: dark) { .flow-step.on { color: #0d130f; } }
+.flow-hint { font-size: 12px; color: var(--muted); }
+.flow-nav { display: flex; gap: 6px; align-items: center; }
+
 /* ③ composerのツール行（写真・t/R トグル）と t/R 入力 */
 .composer-tools { display: flex; gap: 6px; margin-bottom: 6px; }
 .chip { font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px;
