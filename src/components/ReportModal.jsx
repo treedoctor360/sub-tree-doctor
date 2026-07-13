@@ -7,6 +7,7 @@ const FIELDS = [
   ['riskTr', '危険度の見立て'],
   ['management', '対応方針（存置/経過観察/治療/支持保護/伐採）'],
   ['clientExplanation', '依頼者への説明'],
+  ['siteRisk', '周辺・履歴からの見えないリスク'],
   ['uncertainties', '未確定・現地実測が要る点'],
   ['consultReport', '診断レポート本文'],
 ];

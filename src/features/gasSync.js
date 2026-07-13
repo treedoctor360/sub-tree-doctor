@@ -28,6 +28,7 @@ function toRow(rec) {
     risk_tr: rec.riskTr || '',
     management: rec.management || '',
     client_explanation: rec.clientExplanation || '',
+    site_risk: rec.siteRisk || '',
     uncertainties: rec.uncertainties || '',
     consult_report: rec.consultReport || '',
     advisor: rec.advisor || 'Gemini(サブ樹木医)',

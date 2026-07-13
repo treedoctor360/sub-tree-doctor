@@ -91,6 +91,6 @@ export function parseReportJson(text) {
   try {
     return JSON.parse(s);
   } catch {
-    return { findings: '', differential: '', recommendedPrecision: '', riskTr: '', management: '', clientExplanation: '', uncertainties: '', consultReport: text.trim() };
+    return { findings: '', differential: '', recommendedPrecision: '', riskTr: '', management: '', clientExplanation: '', siteRisk: '', uncertainties: '', consultReport: text.trim() };
   }
 }

@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { askGemini, parseReportJson } from '../features/gemini.js';
 import { buildSystemInstruction, REPORT_INSTRUCTION } from '../logic/systemPrompt.js';
 import { classifyTr } from '../logic/diagnosis.js';
+import { buildSiteContext } from '../logic/siteContext.js';
 import { FLOW_STAGES } from '../data/diagnosisFlow.js';
 
 const GREETING = 'サブ樹木医です。いま診ている木で、いちばん気になっている点を聞かせてください。カルテに総合判定や所見を入れておくと、それを踏まえて一緒に考えます。';
@@ -19,7 +20,7 @@ async function downscaleToData(file, max = 1024, q = 0.8) {
   return { mimeType: 'image/jpeg', data: dataUrl.split(',')[1], preview: dataUrl };
 }
 
-export default function ChatPanel({ config, record, messages, setMessages, onReport }) {
+export default function ChatPanel({ config, record, records = [], sites = [], messages, setMessages, onReport }) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -83,7 +84,8 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
     try {
       // 検索クエリはユーザーが「診たい内容」(text)を主に、カルテ構造値で拡張(systemPrompt側)。
       // text が空（画像のみ等）でもカルテ文脈で検索できるよう text を渡す。ガイドONなら段(stage)を渡す。
-      const { instruction, refs, mode } = await buildSystemInstruction(record, config, text, stage);
+      const siteContext = buildSiteContext(record, records, sites, config);
+      const { instruction, refs, mode } = await buildSystemInstruction(record, config, text, stage, siteContext);
       const reply = await askGemini(config.geminiRelayUrl, instruction, next, config.geminiRelayToken);
       setMessages([...next, { role: 'model', text: reply, refs, mode }]);
     } catch (e) {
@@ -103,7 +105,8 @@ export default function ChatPanel({ config, record, messages, setMessages, onRep
       // 検索クエリは所見＋これまでの相談内容（要点）から組み立てる。
       const query = [record.findings, ...messages.filter((m) => m.role === 'user').map((m) => m.text)]
         .filter(Boolean).join(' ').slice(0, 1000);
-      const { instruction } = await buildSystemInstruction(record, config, query);
+      const siteContext = buildSiteContext(record, records, sites, config);
+      const { instruction } = await buildSystemInstruction(record, config, query, null, siteContext);
       const reply = await askGemini(config.geminiRelayUrl, instruction, hist, config.geminiRelayToken);
       onReport(parseReportJson(reply));
     } catch (e) {

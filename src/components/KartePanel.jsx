@@ -48,11 +48,26 @@ function OverallBadge({ record }) {
   );
 }
 
-export default function KartePanel({ record, onChange }) {
+export default function KartePanel({ record, onChange, sites = [], onCreateSite }) {
   const [importText, setImportText] = useState('');
   const [importMsg, setImportMsg] = useState('');
+  const [geoMsg, setGeoMsg] = useState('');
+  const [geoBusy, setGeoBusy] = useState(false);
 
   const setMeta = (k, v) => onChange({ [k]: v });
+
+  const getGeo = () => {
+    if (!navigator.geolocation) { setGeoMsg('この端末は位置情報に非対応です（樹木Noで近接判定します）。'); return; }
+    setGeoBusy(true); setGeoMsg('取得中…');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        onChange({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        setGeoMsg(''); setGeoBusy(false);
+      },
+      (err) => { setGeoMsg('取得できませんでした（' + err.message + '）。座標なしでも樹木Noで動作します。'); setGeoBusy(false); },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
   const setHealth = (id, v) => onChange({ health: { ...record.health, [id]: v } });
   const setScore = (id, v) => onChange({ scores: { ...record.scores, [id]: v } });
   const setTebiki = (id, v) => onChange({ tebiki: { ...record.tebiki, [id]: v } });
@@ -93,11 +108,37 @@ export default function KartePanel({ record, onChange }) {
       <details className="block" open>
         <summary>対象木</summary>
         <div className="grid2">
+          <label>現地（案件/場所）
+            <div className="row">
+              <select value={record.projectId || ''} onChange={(e) => setMeta('projectId', e.target.value)} style={{ flex: 1 }}>
+                <option value="">— 未選択 —</option>
+                {sites.map((s) => (
+                  <option key={s.id} value={s.id}>{[s.projectName, s.name].filter(Boolean).join(' / ') || s.name || s.id}</option>
+                ))}
+              </select>
+              {onCreateSite ? <button type="button" className="btn small" onClick={onCreateSite}>＋現地</button> : null}
+            </div>
+          </label>
+          <label>樹木No<input value={record.treeNo || ''} onChange={(e) => setMeta('treeNo', e.target.value)} placeholder="現地内で一意（例: 1, 2, 3…）" /></label>
           <label>樹種<input value={record.species || ''} onChange={(e) => setMeta('species', e.target.value)} /></label>
           <label>個体名/番号<input value={record.nickname || ''} onChange={(e) => setMeta('nickname', e.target.value)} /></label>
           <label>場所<input value={record.location || ''} onChange={(e) => setMeta('location', e.target.value)} /></label>
           <label>樹高(m)<input type="number" value={record.treeHeight || ''} onChange={(e) => setMeta('treeHeight', e.target.value)} /></label>
           <label>幹周(cm)<input type="number" value={record.trunkGirth || ''} onChange={(e) => setMeta('trunkGirth', e.target.value)} /></label>
+          <label className="wide">座標（近接木の距離判定に使用）
+            <div className="row">
+              <button type="button" className="btn small" onClick={getGeo} disabled={geoBusy}>📍 現在地を取得</button>
+              <span className="muted small">
+                {record.latitude && record.longitude
+                  ? `${Number(record.latitude).toFixed(5)}, ${Number(record.longitude).toFixed(5)}`
+                  : (geoMsg || '座標なし（樹木Noの連番で近接判定します）')}
+              </span>
+              {record.latitude && record.longitude
+                ? <button type="button" className="btn small" onClick={() => onChange({ latitude: '', longitude: '' })}>クリア</button>
+                : null}
+            </div>
+            {record.latitude && record.longitude && geoMsg ? <span className="muted small">{geoMsg}</span> : null}
+          </label>
         </div>
       </details>
 

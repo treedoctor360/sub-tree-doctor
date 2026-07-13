@@ -14,6 +14,9 @@ const DEFAULTS = {
   // RAGの知識ベース(knowledgeEmbeddings.json)の配信URL。非公開(Drive等)を想定。
   // 未設定なら静的KB(knowledgeBase.js)にフォールバック。
   kbEmbeddingsUrl: '',
+  // 現地コンテキスト: 近接木の抽出パラメータ（座標がある場合の半径m / 最大本数）。
+  neighborRadiusM: 10,
+  neighborMax: 8,
 };
 
 export function loadConfig() {

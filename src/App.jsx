@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useConfig } from './store/useConfig.js';
 import { DECLINE_ITEM_IDS } from './data/declineItems.js';
 import { evaluateRecord } from './logic/diagnosis.js';
-import { idbGetAll, idbPut, idbRemove } from './db/db.js';
+import { idbGetAll, idbPut, idbRemove, idbGetAllSites, idbPutSite, idbRemoveSite } from './db/db.js';
 import { gasSaveRecords, gasGetAll } from './features/gasSync.js';
 import KartePanel from './components/KartePanel.jsx';
+import SitePanel from './components/SitePanel.jsx';
 import ChatFab from './components/ChatFab.jsx';
 import RecordList from './components/RecordList.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
@@ -24,7 +25,7 @@ function blankRecord() {
 }
 
 const TABS = [
-  ['karte', 'カルテ'], ['record', '記録'], ['ref', '参照'], ['settings', '設定'],
+  ['karte', 'カルテ'], ['site', '現地'], ['record', '記録'], ['ref', '参照'], ['settings', '設定'],
 ];
 
 export default function App() {
@@ -34,11 +35,13 @@ export default function App() {
   const [record, setRecord] = useState(blankRecord);
   const [messages, setMessages] = useState([]);
   const [records, setRecords] = useState([]);
+  const [sites, setSites] = useState([]);
   const [draft, setDraft] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [toast, setToast] = useState('');
 
   useEffect(() => { idbGetAll().then(setRecords).catch(() => {}); }, []);
+  useEffect(() => { idbGetAllSites().then(setSites).catch(() => {}); }, []);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 3000); return () => clearTimeout(t); }, [toast]);
 
   const onKarteChange = (patch) => setRecord((r) => ({ ...r, ...patch }));
@@ -71,6 +74,17 @@ export default function App() {
     await idbRemove(id);
     setRecords((rs) => rs.filter((r) => r.id !== id));
     setToast('削除しました。');
+  };
+
+  const saveSite = async (site) => {
+    await idbPutSite(site);
+    setSites((ss) => [site, ...ss.filter((s) => s.id !== site.id)]);
+    setToast('現地を保存しました。');
+  };
+  const deleteSite = async (id) => {
+    await idbRemoveSite(id);
+    setSites((ss) => ss.filter((s) => s.id !== id));
+    setToast('現地を削除しました。');
   };
 
   const syncUp = async () => {
@@ -117,7 +131,12 @@ export default function App() {
 
       <main className="main">
         {tab === 'karte' && (
-          <section className="pane"><KartePanel record={record} onChange={onKarteChange} /></section>
+          <section className="pane">
+            <KartePanel record={record} onChange={onKarteChange} sites={sites} onCreateSite={() => setTab('site')} />
+          </section>
+        )}
+        {tab === 'site' && (
+          <section className="pane"><SitePanel sites={sites} onSave={saveSite} onDelete={deleteSite} /></section>
         )}
         {tab === 'record' && (
           <section className="pane">
@@ -130,6 +149,7 @@ export default function App() {
       </main>
 
       <ChatFab open={chatOpen} setOpen={setChatOpen} config={config} record={record}
+        records={records} sites={sites}
         messages={messages} setMessages={setMessages} onReport={(d) => setDraft(d)} />
 
       {draft ? <ReportModal draft={draft} onSave={saveReport} onClose={() => setDraft(null)} /> : null}
