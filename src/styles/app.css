@@ -25,6 +25,7 @@
   }
 }
 * { box-sizing: border-box; }
+button { -webkit-tap-highlight-color: transparent; } /* タップ時のハイライト明滅・微妙なズレを抑える */
 body { margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--ink); line-height: 1.6; -webkit-font-smoothing: antialiased; }
 h2, h3 { margin: 0; }
 a { color: var(--accent-ink); }
@@ -58,7 +59,9 @@ textarea { resize: vertical; }
 .tab { border: none; background: none; font-family: inherit; font-size: .92rem; color: var(--muted);
   padding: 12px 15px; border-bottom: 2.5px solid transparent; cursor: pointer; white-space: nowrap; width: auto; }
 .tab:hover { color: var(--ink); }
-.tab.active { color: var(--accent-ink); border-bottom-color: var(--accent); font-weight: 600; }
+/* font-weight は変えない（太字化で幅が伸びてタブ列が横にズレる＝押すと画面が少し動く原因）。
+   選択状態はアクセント色＋下線で示す。 */
+.tab.active { color: var(--accent-ink); border-bottom-color: var(--accent); }
 
 .main { flex: 1; padding: 16px 18px 40px; }
 .split { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 18px; }
@@ -103,14 +106,15 @@ textarea { resize: vertical; }
 .scale-group { font-size: .66rem; font-weight: 700; color: var(--muted); background: var(--surface);
   border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
 .scale-label { font-weight: 600; font-size: .92rem; }
-.scale-btns { display: grid; gap: 6px; }
-.scale-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; width: auto;
-  border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 3px; min-height: 58px;
+.scale-btns { display: grid; gap: 5px; }
+/* ボタンを従来の約4/5サイズに（高さ・余白・文字を縮小） */
+.scale-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; width: auto;
+  border: 1px solid var(--line-strong); border-radius: 7px; padding: 6px 3px; min-height: 46px;
   background: var(--surface); color: var(--ink); cursor: pointer; font-family: inherit; }
 .scale-btn:hover:not(.on) { border-color: var(--accent); }
 .scale-btn.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
-.scale-num { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.scale-desc { font-size: .64rem; line-height: 1.25; color: var(--muted); text-align: center; word-break: break-word; }
+.scale-num { font-size: .92rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.scale-desc { font-size: .56rem; line-height: 1.2; color: var(--muted); text-align: center; word-break: break-word; }
 .scale-btn.on .scale-desc { color: var(--accent-ink); }
 .import-area { font-family: var(--font-num); font-size: .78rem; }
 .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -119,7 +123,8 @@ textarea { resize: vertical; }
 /* chat */
 .chat-pane { padding: 0; display: flex; flex-direction: column; }
 .chat { display: flex; flex-direction: column; height: 78vh; }
-.messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  overscroll-behavior: contain; } /* スクロールが後ろの本体へ伝播しない */
 /* 吹き出し・出典・画像は縦に積む（横並びにすると出典が本文の右半分に回り込む）。 */
 .msg { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .msg.user { align-items: flex-end; }
@@ -153,6 +158,7 @@ textarea { resize: vertical; }
 .chat-backdrop {
   position: absolute; inset: 0; border: none; padding: 0; cursor: pointer;
   background: rgba(20,23,15,.32); opacity: 0; transition: opacity .22s ease;
+  touch-action: none; /* 背景をなぞっても本体がスクロールしない */
 }
 .chat-overlay.open .chat-backdrop { opacity: 1; }
 
@@ -232,7 +238,7 @@ table.fungi th { background: var(--surface-2); color: var(--muted); font-size: .
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--line); }
 .modal-head h3 { font-family: var(--font-serif); }
 .icon-btn { border: none; background: none; font-size: 1.1rem; cursor: pointer; color: var(--muted); width: auto; }
-.modal-body { padding: 16px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.modal-body { padding: 16px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; overscroll-behavior: contain; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--line); }
 
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg);

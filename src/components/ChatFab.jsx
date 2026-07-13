@@ -1,8 +1,17 @@
+import { useEffect } from 'react';
 import ChatPanel from './ChatPanel.jsx';
 
 // フローティングのAIチャット。右下のボタンで開閉し、下からせり上がるシートに ChatPanel を内包する。
 // ChatPanel 自体は変更せず、開閉のガワだけを足す（既存の対話ロジックはそのまま）。
 export default function ChatFab({ open, setOpen, config, record, records, sites, messages, setMessages, onReport }) {
+  // チャットを開いている間は背景（本体）のスクロールを止める（後ろの画面が動くのを防ぐ）。
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
   // 現在のカルテの見出し（何を根拠に相談しているかを一目で分かるように）
   const subject = [record?.species, record?.nickname || record?.treeNo]
     .filter(Boolean).join(' / ') || '対象木 未設定';
