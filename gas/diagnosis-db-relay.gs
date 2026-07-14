@@ -25,7 +25,7 @@ const COLS = [
   'species','nickname','location','tree_height','trunk_girth','lat','lng',
   'overall_grade','overall_text','decline_avg','decline_level','worst_health',
   'findings','differential','recommended_precision','risk_tr','management',
-  'client_explanation','uncertainties','consult_report','advisor',
+  'client_explanation','site_risk','uncertainties','consult_report','advisor',
   '_json','synced_at'
 ];
 
