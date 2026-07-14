@@ -2,7 +2,7 @@
 
 樹木医の診断相談AI（React + Vite の SPA / GitHub Pages）。樹木医必携の2冊を根拠に
 RAG検索し、gemini-2.5-flash で対話する。このファイルは「常に守る規約・制約」の蒸留版。
-経緯の記録は `docs/HANDOFF-*.md`（時系列・履歴）を参照。
+**設計思想（なぜこう作るか）は `docs/design-philosophy.md`**、経緯の記録は `docs/HANDOFF-*.md`（時系列・履歴）を参照。
 
 ## 絶対に守ること（事故りやすい所）
 
