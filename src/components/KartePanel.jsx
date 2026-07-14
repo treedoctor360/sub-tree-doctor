@@ -32,16 +32,20 @@ function ScaleItem({ group, label, precision, options, value, onSelect }) {
 
 function OverallBadge({ record }) {
   const { avg, worst, overall } = evaluateRecord(record, DECLINE_ITEM_IDS);
-  if (!overall) return <div className="muted small">健全度・活力度が未入力です。</div>;
-  const cls = { A: 'ok', B: 'caution', C: 'treat', D: 'danger' }[overall.grade];
-  const needsPrecision = PRECISION_TRIGGER_IDS.some((id) => ['B', 'C', 'D'].includes((record.health?.[id] || '').toUpperCase()))
-    || (record.fungusOther && record.fungusOther.trim());
+  const cls = overall ? { A: 'ok', B: 'caution', C: 'treat', D: 'danger' }[overall.grade] : 'none';
+  const needsPrecision = !!overall && (
+    PRECISION_TRIGGER_IDS.some((id) => ['B', 'C', 'D'].includes((record.health?.[id] || '').toUpperCase()))
+    || (record.fungusOther && record.fungusOther.trim()));
+  // 未入力でも同じ構造・高さで描画する（入力した瞬間に高さが変わって画面が跳ねるのを防ぐ）。
   return (
     <div className="overall">
-      <span className={`pill ${cls}`}>総合 {overall.grade}：{overall.gradeText}</span>
+      {overall
+        ? <span className={`pill ${cls}`}>総合 {overall.grade}：{overall.gradeText}</span>
+        : <span className="pill none">総合 —</span>}
       <span className="muted small">
-        活力度平均 {avg == null ? '—' : avg.toFixed(2)}
-        {overall.declineLevel ? `（衰退度${overall.declineLevel}）` : ''} / 健全度最悪 {worst ?? '—'}
+        {overall
+          ? `活力度平均 ${avg == null ? '—' : avg.toFixed(2)}${overall.declineLevel ? `（衰退度${overall.declineLevel}）` : ''} / 健全度最悪 ${worst ?? '—'}`
+          : '健全度・活力度を入力すると総合判定が表示されます。'}
       </span>
       {needsPrecision ? <div className="warn-banner">外観所見（子実体・開口空洞・腐朽部露出等）あり → 精密診断（機器診断）の要否を検討。</div> : null}
     </div>

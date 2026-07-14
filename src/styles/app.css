@@ -70,10 +70,12 @@ textarea { resize: vertical; }
 .pane-title { font-family: var(--font-serif); font-size: 1.05rem; margin-bottom: 10px; }
 .karte-pane { max-height: 78vh; overflow-y: auto; }
 
-/* overall badge */
-.overall { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: var(--surface-2);
+/* overall badge — 高さを予約して、入力の有無で伸縮させない（Safariでの画面ジャンプ防止） */
+.overall { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 10px 12px;
+  min-height: 82px; background: var(--surface-2);
   border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; }
 .pill { display: inline-block; font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+.pill.none { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
 .pill.ok { background: var(--ok-soft); color: var(--ok); }
 .pill.caution { background: var(--caution-soft); color: var(--caution); }
 .pill.treat { background: var(--treat-soft); color: var(--treat); }
